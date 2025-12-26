@@ -29,6 +29,11 @@ export interface SwapContext {
  * Comprehensive error map covering:
  * - Ethers.js error codes
  * - MetaMask/EIP-1193 error codes
+ * - Phantom/Solana wallet errors
+ * - TON/TonConnect errors
+ * - Tron/TronLink errors
+ * - Sui wallet errors
+ * - Aptos wallet errors
  * - Uniswap V2/V3 errors
  * - PancakeSwap errors
  * - SushiSwap errors
@@ -39,7 +44,7 @@ export interface SwapContext {
  */
 const LOCAL_ERROR_MAP: Record<string, string> = {
   // ============================================
-  // User Actions / Wallet Rejections
+  // User Actions / Wallet Rejections (Generic)
   // ============================================
   ACTION_REJECTED: "The transaction was cancelled in your wallet.",
   USER_REJECTED: "You declined the request in your wallet.",
@@ -50,6 +55,9 @@ const LOCAL_ERROR_MAP: Record<string, string> = {
   "Request rejected": "You declined the request in your wallet.",
   "4001": "You declined the request in your wallet.",
   "User cancelled": "You cancelled the transaction.",
+  "User closed": "You closed the wallet popup without completing the action.",
+  "Rejected by user": "You declined the request.",
+  "User disapproved": "You declined the request.",
 
   // ============================================
   // Insufficient Funds / Balance Errors
@@ -287,6 +295,184 @@ const LOCAL_ERROR_MAP: Record<string, string> = {
   "WalletConnect: User rejected": "You declined the request in your wallet.",
   "No matching key": "Session not found. Please reconnect your wallet.",
   "Pairing expired": "Connection expired. Please scan the QR code again.",
+  "Topic is not a pairing topic":
+    "Invalid wallet connection. Please reconnect.",
+  "Missing or invalid": "Connection error. Please try reconnecting.",
+  "Relay connection failed": "Connection to wallet relay failed. Try again.",
+
+  // ============================================
+  // MetaMask Specific Errors
+  // ============================================
+  "MetaMask Tx Signature":
+    "MetaMask encountered an issue signing the transaction.",
+  "MetaMask Message Signature":
+    "MetaMask couldn't sign the message. Please try again.",
+  "MetaMask Personal Message Signature":
+    "MetaMask personal sign failed. Please try again.",
+  "MetaMask Typed Message Signature":
+    "MetaMask typed data signing failed. Please try again.",
+  "MetaMask Chain": "Please switch networks in MetaMask to continue.",
+  "MetaMask RPC Error": "MetaMask encountered an RPC error. Please try again.",
+  "User denied account authorization":
+    "You declined to connect your MetaMask account.",
+  "Already processing eth_requestAccounts":
+    "MetaMask is already processing a connection request.",
+  "Request of type 'wallet_requestPermissions' already pending":
+    "A permission request is already pending in MetaMask.",
+  "eth_accounts not supported": "Please unlock MetaMask and try again.",
+
+  // ============================================
+  // Phantom / Solana Wallet Errors
+  // ============================================
+  WalletNotConnectedError:
+    "Wallet not connected. Please connect your wallet first.",
+  WalletConnectionError: "Failed to connect wallet. Please try again.",
+  WalletSendTransactionError: "Failed to send transaction. Please try again.",
+  WalletSignTransactionError: "You cancelled the transaction signing.",
+  WalletSignMessageError: "Message signing failed. Please try again.",
+  WalletNotReadyError:
+    "Wallet not ready. Please ensure it's installed and unlocked.",
+  WalletPublicKeyError: "Could not get wallet address. Please reconnect.",
+  WalletDisconnectionError: "Failed to disconnect wallet. Please try again.",
+  WalletAccountError: "Could not access wallet account.",
+  WalletNotSelectedError: "No wallet selected. Please select a wallet first.",
+  "Phantom - Rejected": "You declined the request in Phantom.",
+  "Phantom - Unauthorized": "Phantom is not authorized. Please connect first.",
+  "Phantom - Disconnected": "Phantom is disconnected. Please reconnect.",
+  "Phantom wallet not found":
+    "Phantom wallet not detected. Please install Phantom.",
+  "Solflare - Rejected": "You declined the request in Solflare.",
+  "Backpack - Rejected": "You declined the request in Backpack.",
+  "Transaction simulation failed":
+    "Transaction simulation failed. Check your inputs.",
+  "Blockhash not found": "Transaction expired. Please try again.",
+  "Transaction was not confirmed":
+    "Transaction wasn't confirmed in time. It may still succeed.",
+  "block height exceeded":
+    "Transaction expired. Please try again with fresh blockhash.",
+  "Signature verification failed": "Transaction signature verification failed.",
+  "Account not found": "Wallet account not found. Please check the address.",
+  "Insufficient SOL": "Not enough SOL for transaction fees.",
+  "Insufficient lamports": "Not enough SOL balance for this transaction.",
+  "Program failed to complete":
+    "The program execution failed. Please try again.",
+  "custom program error":
+    "Smart contract returned an error. Please check your inputs.",
+  AccountNotFound: "The specified account doesn't exist.",
+  InstructionError: "Transaction instruction failed. Please check your inputs.",
+  InvalidAccountData: "Invalid account data. Please try again.",
+
+  // ============================================
+  // TON / TonConnect Errors
+  // ============================================
+  USER_REJECTS_ERROR: "You declined the request in your TON wallet.",
+  UNKNOWN_APP_ERROR: "Unknown app error. Please reconnect your wallet.",
+  BAD_REQUEST_ERROR: "Invalid request. Please try again.",
+  UNKNOWN_ERROR: "An unknown error occurred in your TON wallet.",
+  METHOD_NOT_SUPPORTED: "This method is not supported by your TON wallet.",
+  TON_CONNECT_ERROR: "TON Connect error. Please reconnect your wallet.",
+  "Tonkeeper - Rejected": "You declined the request in Tonkeeper.",
+  "Tonkeeper - Cancelled": "You cancelled the request in Tonkeeper.",
+  "OpenMask - Rejected": "You declined the request in OpenMask.",
+  "MyTonWallet - Rejected": "You declined the request in MyTonWallet.",
+  "TonConnect: Connection was closed":
+    "Wallet connection was closed. Please reconnect.",
+  "TonConnect: Bridge connection error":
+    "Connection error. Please try reconnecting your TON wallet.",
+  "TonConnect: Session not found":
+    "Session expired. Please reconnect your TON wallet.",
+  "Unable to verify source":
+    "Unable to verify wallet source. Please reconnect.",
+  "Wallet is not connected": "TON wallet not connected. Please connect first.",
+  "Invalid BOC": "Invalid transaction data. Please try again.",
+  "Not enough TON": "Not enough TON for this transaction.",
+  "Not enough balance": "Insufficient balance for this transaction.",
+
+  // ============================================
+  // Tron / TronLink Errors
+  // ============================================
+  "TronLink - Rejected": "You declined the request in TronLink.",
+  "TronLink - Cancelled": "You cancelled the request in TronLink.",
+  "TronLink not installed": "Please install TronLink wallet extension.",
+  "TronLink is locked": "TronLink is locked. Please unlock it first.",
+  "TronLink not ready": "TronLink is not ready. Please wait and try again.",
+  "Confirmation declined by user": "You declined the transaction in TronLink.",
+  BANDWITH: "Not enough bandwidth for this transaction. Please freeze TRX.",
+  BANDWIDTH: "Not enough bandwidth. Please freeze TRX for bandwidth.",
+  ENERGY:
+    "Not enough energy for this transaction. Please freeze TRX for energy.",
+  BALANCE_NOT_SUFFICIENT: "Insufficient TRX balance.",
+  CONTRACT_VALIDATE_ERROR:
+    "Contract validation failed. Please check your inputs.",
+  REVERT: "Transaction reverted. Please check your inputs.",
+  OUT_OF_ENERGY:
+    "Out of energy. Please freeze TRX or reduce transaction complexity.",
+  "Account resource insufficient":
+    "Not enough bandwidth or energy. Please freeze TRX.",
+  "Contract not found": "Smart contract not found. Please check the address.",
+  "FoxWallet - Rejected": "You declined the request in FoxWallet.",
+
+  // ============================================
+  // Sui Wallet Errors
+  // ============================================
+  "WALLET.CONNECT_ERROR": "Failed to connect to Sui wallet. Please try again.",
+  "WALLET.DISCONNECT_ERROR": "Failed to disconnect from Sui wallet.",
+  "WALLET.SIGN_TX_ERROR": "Transaction signing failed or was rejected.",
+  "WALLET.SIGN_MSG_ERROR": "Message signing failed. Please try again.",
+  "WALLET.LISTEN_TO_EVENT_ERROR": "Failed to listen to wallet events.",
+  "WALLET.METHOD_NOT_IMPLEMENTED_ERROR":
+    "This method is not supported by your wallet.",
+  "WALLET.CONNECT_ERROR__USER_REJECTED":
+    "You declined to connect your Sui wallet.",
+  "Sui Wallet - Rejected": "You declined the request in Sui Wallet.",
+  "Suiet - Rejected": "You declined the request in Suiet wallet.",
+  "Ethos - Rejected": "You declined the request in Ethos wallet.",
+  "Martian Sui - Rejected": "You declined the request in Martian Sui wallet.",
+  "Insufficient gas": "Not enough SUI for gas fees.",
+  InsufficientGas: "Not enough SUI to pay for transaction fees.",
+  InsufficientCoinBalance: "Insufficient coin balance for this transaction.",
+  ObjectNotFound: "The specified object was not found on chain.",
+  InvalidTxSignature: "Invalid transaction signature.",
+  MoveAbort: "Smart contract execution failed.",
+  PackageNotFound: "Package not found. Please check the address.",
+  DynamicFieldNotFound: "Dynamic field not found.",
+  InvalidPublicKey: "Invalid public key provided.",
+
+  // ============================================
+  // Aptos Wallet Errors
+  // ============================================
+  "Petra - Rejected": "You declined the request in Petra wallet.",
+  "Pontem - Rejected": "You declined the request in Pontem wallet.",
+  "Martian - Rejected": "You declined the request in Martian wallet.",
+  "Rise - Rejected": "You declined the request in Rise wallet.",
+  "Fewcha - Rejected": "You declined the request in Fewcha wallet.",
+  AptosWalletError: "Aptos wallet encountered an error. Please try again.",
+  INSUFFICIENT_BALANCE_FOR_TRANSACTION_FEE: "Not enough APT for gas fees.",
+  SEQUENCE_NUMBER_TOO_OLD: "Transaction sequence error. Please try again.",
+  SEQUENCE_NUMBER_TOO_NEW: "Transaction sequence too new. Please wait.",
+  TRANSACTION_EXPIRED: "Transaction expired. Please try again.",
+  INVALID_AUTH_KEY: "Invalid authentication key.",
+  EPENDING_TRANSACTION_EXISTS: "A pending transaction exists. Please wait.",
+  MAX_GAS_UNITS_BELOW_MIN_TRANSACTION_GAS_UNITS: "Gas limit too low.",
+  MAX_GAS_UNITS_EXCEEDS_MAX_GAS_UNITS_BOUND: "Gas limit too high.",
+  GAS_UNIT_PRICE_BELOW_MIN_BOUND: "Gas price too low.",
+  GAS_UNIT_PRICE_ABOVE_MAX_BOUND: "Gas price too high.",
+  MOVE_ABORT: "Smart contract execution aborted.",
+  EXECUTION_LIMIT_REACHED: "Execution limit reached. Please try again.",
+  OUT_OF_GAS: "Transaction ran out of gas. Increase gas limit.",
+  INVALID_SIGNATURE: "Invalid transaction signature.",
+  INVALID_TRANSACTION_PAYLOAD: "Invalid transaction data.",
+
+  // ============================================
+  // Bitcoin / Ordinals Wallet Errors
+  // ============================================
+  "UniSat - Rejected": "You declined the request in UniSat wallet.",
+  "Xverse - Rejected": "You declined the request in Xverse wallet.",
+  "Leather - Rejected": "You declined the request in Leather wallet.",
+  "OKX Wallet - Rejected": "You declined the request in OKX Wallet.",
+  "Insufficient BTC": "Not enough BTC for this transaction.",
+  "Invalid PSBT": "Invalid transaction format. Please try again.",
+  "UTXO not found": "Transaction input not found. Please try again.",
 
   // ============================================
   // Reown AppKit Error Codes
@@ -358,7 +544,7 @@ const LOCAL_ERROR_MAP: Record<string, string> = {
   MEV: "MEV protection triggered. Try using a private RPC.",
 
   // ============================================
-  // Miscellaneous
+  // Miscellaneous / Generic Errors
   // ============================================
   "Header not found": "Block not found. Please try again.",
   "Unknown block": "Block not found. The network may be syncing.",
@@ -368,6 +554,107 @@ const LOCAL_ERROR_MAP: Record<string, string> = {
   exceeded: "Limit exceeded. Please try again later.",
   Forbidden: "Access denied. Please check your permissions.",
   Unauthorized: "Not authorized. Please reconnect your wallet.",
+
+  // ============================================
+  // Cross-Chain / Bridge Errors
+  // ============================================
+  "Bridge error": "Cross-chain bridge error. Please try again.",
+  "Bridge timeout": "Bridge transaction timed out. Please check status.",
+  "Unsupported chain": "This chain is not supported for this operation.",
+  "Chain mismatch": "Your wallet is on the wrong network. Please switch.",
+  "Invalid destination": "Invalid destination chain or address.",
+
+  // ============================================
+  // Ledger / Hardware Wallet Errors
+  // ============================================
+  "Ledger device": "Please connect and unlock your Ledger device.",
+  "Ledger locked": "Your Ledger is locked. Please unlock it.",
+  TransportOpenUserCancelled: "Ledger connection was cancelled.",
+  TransportInterfaceNotAvailable: "Ledger not accessible. Try reconnecting.",
+  DisconnectedDevice: "Ledger disconnected. Please reconnect.",
+  DisconnectedDeviceDuringOperation:
+    "Ledger disconnected during operation. Please reconnect and retry.",
+  "Denied by user on Ledger": "You rejected the request on your Ledger device.",
+  "Open app": "Please open the correct app on your Ledger.",
+  "App does not seem to be open": "Please open the right app on your Ledger.",
+  "Device is busy": "Ledger is busy. Please wait and try again.",
+  "Invalid channel": "Invalid Ledger connection. Please reconnect.",
+  "Trezor: Action cancelled": "You cancelled the action on your Trezor.",
+  "Trezor: PIN cancelled": "PIN entry was cancelled on Trezor.",
+  "Trezor: Passphrase cancelled": "Passphrase entry was cancelled on Trezor.",
+  "Device call in progress": "Hardware wallet is processing. Please wait.",
+
+  // ============================================
+  // Coinbase Wallet Errors
+  // ============================================
+  "Coinbase Wallet - Rejected": "You declined the request in Coinbase Wallet.",
+  "User denied request signature": "You declined the signature request.",
+  "QR Code Modal closed": "QR code scanning was cancelled.",
+
+  // ============================================
+  // Trust Wallet Errors
+  // ============================================
+  "Trust Wallet - Rejected": "You declined the request in Trust Wallet.",
+  "Trust: User cancelled": "You cancelled the request in Trust Wallet.",
+
+  // ============================================
+  // Rainbow Wallet Errors
+  // ============================================
+  "Rainbow - Rejected": "You declined the request in Rainbow.",
+
+  // ============================================
+  // Rabby Wallet Errors
+  // ============================================
+  "Rabby - Rejected": "You declined the request in Rabby.",
+  "Rabby: User rejected": "You declined the request in Rabby wallet.",
+
+  // ============================================
+  // Safe (Gnosis) Wallet Errors
+  // ============================================
+  "Safe transaction failed": "Safe transaction execution failed.",
+  "Signature request rejected": "Safe signature request was rejected.",
+  "Transaction rejected by Safe": "Transaction was rejected in Safe.",
+  "Not enough signatures":
+    "More signatures are needed for this Safe transaction.",
+  "Threshold not reached":
+    "Not enough owners have signed this Safe transaction.",
+
+  // ============================================
+  // Keplr / Cosmos Wallet Errors
+  // ============================================
+  "Keplr - Rejected": "You declined the request in Keplr.",
+  "Request rejected by user": "You declined the request.",
+  "Chain not supported": "This chain is not supported by your wallet.",
+  "Failed to retrieve account":
+    "Could not get account from Keplr. Please reconnect.",
+  "Key not found": "Account not found. Please add this chain to Keplr.",
+
+  // ============================================
+  // Argent Wallet Errors
+  // ============================================
+  "Argent - Rejected": "You declined the request in Argent.",
+  "Guardian signature required": "Your Argent guardian needs to approve this.",
+
+  // ============================================
+  // Frame Wallet Errors
+  // ============================================
+  "Frame - Rejected": "You declined the request in Frame.",
+
+  // ============================================
+  // Zerion Wallet Errors
+  // ============================================
+  "Zerion - Rejected": "You declined the request in Zerion.",
+
+  // ============================================
+  // Wallet Standard Errors
+  // ============================================
+  "Wallet not installed": "Please install a compatible wallet.",
+  "Wallet not found": "Wallet not detected. Please install one.",
+  "Wallet not connected": "Wallet not connected. Please connect first.",
+  "No accounts found": "No accounts found in your wallet.",
+  "Account changed": "Your wallet account changed. Please verify.",
+  "Chain changed": "Your wallet network changed.",
+  "Wallet disconnected": "Wallet was disconnected. Please reconnect.",
 };
 
 const DEFAULT_FALLBACK_MESSAGE = "Transaction failed. Please try again.";

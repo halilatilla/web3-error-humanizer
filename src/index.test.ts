@@ -193,6 +193,164 @@ describe("Web3ErrorHumanizer", () => {
     });
   });
 
+  describe("Solana/Phantom Wallet Errors", () => {
+    it("should handle WalletNotConnectedError", async () => {
+      const error = new Error("WalletNotConnectedError");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["WalletNotConnectedError"]);
+    });
+
+    it("should handle WalletSignTransactionError", async () => {
+      const error = new Error("WalletSignTransactionError");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["WalletSignTransactionError"]);
+    });
+
+    it("should handle Phantom rejection", async () => {
+      const error = new Error("Phantom - Rejected");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Phantom - Rejected"]);
+    });
+
+    it("should handle insufficient SOL", async () => {
+      const error = new Error("Insufficient SOL for transaction");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Insufficient SOL"]);
+    });
+  });
+
+  describe("TON/TonConnect Wallet Errors", () => {
+    it("should handle USER_REJECTS_ERROR", async () => {
+      const error = new Error("USER_REJECTS_ERROR");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["USER_REJECTS_ERROR"]);
+    });
+
+    it("should handle Tonkeeper rejection", async () => {
+      const error = new Error("Tonkeeper - Rejected");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Tonkeeper - Rejected"]);
+    });
+
+    it("should handle Not enough TON", async () => {
+      const error = new Error("Not enough TON");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Not enough TON"]);
+    });
+  });
+
+  describe("Tron/TronLink Wallet Errors", () => {
+    it("should handle TronLink rejection", async () => {
+      const error = new Error("TronLink - Rejected");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["TronLink - Rejected"]);
+    });
+
+    it("should handle bandwidth error", async () => {
+      const error = new Error("BANDWIDTH error occurred");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["BANDWIDTH"]);
+    });
+
+    it("should handle energy error", async () => {
+      const error = new Error("ENERGY insufficient");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["ENERGY"]);
+    });
+  });
+
+  describe("Sui Wallet Errors", () => {
+    it("should handle Sui wallet connection error", async () => {
+      const error = new Error("WALLET.CONNECT_ERROR");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["WALLET.CONNECT_ERROR"]);
+    });
+
+    it("should handle InsufficientGas", async () => {
+      const error = new Error("InsufficientGas for transaction");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["InsufficientGas"]);
+    });
+
+    it("should handle Suiet rejection", async () => {
+      const error = new Error("Suiet - Rejected");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Suiet - Rejected"]);
+    });
+  });
+
+  describe("Aptos Wallet Errors", () => {
+    it("should handle Petra rejection", async () => {
+      const error = new Error("Petra - Rejected");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Petra - Rejected"]);
+    });
+
+    it("should handle SEQUENCE_NUMBER_TOO_OLD", async () => {
+      const error = new Error("SEQUENCE_NUMBER_TOO_OLD");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["SEQUENCE_NUMBER_TOO_OLD"]);
+    });
+
+    it("should handle TRANSACTION_EXPIRED", async () => {
+      const error = new Error("TRANSACTION_EXPIRED");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["TRANSACTION_EXPIRED"]);
+    });
+  });
+
+  describe("Hardware Wallet Errors", () => {
+    it("should handle Ledger device error", async () => {
+      const error = new Error("Ledger device not found");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Ledger device"]);
+    });
+
+    it("should handle Ledger locked", async () => {
+      const error = new Error("Ledger locked");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Ledger locked"]);
+    });
+
+    it("should handle Trezor cancellation", async () => {
+      const error = new Error("Trezor: Action cancelled");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Trezor: Action cancelled"]);
+    });
+  });
+
+  describe("Other Wallet Errors", () => {
+    it("should handle Coinbase Wallet rejection", async () => {
+      const error = new Error("Coinbase Wallet - Rejected");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Coinbase Wallet - Rejected"]);
+    });
+
+    it("should handle Trust Wallet rejection", async () => {
+      const error = new Error("Trust Wallet - Rejected");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Trust Wallet - Rejected"]);
+    });
+
+    it("should handle Rainbow rejection", async () => {
+      const error = new Error("Rainbow - Rejected");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Rainbow - Rejected"]);
+    });
+
+    it("should handle Rabby rejection", async () => {
+      const error = new Error("Rabby - Rejected");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Rabby - Rejected"]);
+    });
+
+    it("should handle Keplr rejection", async () => {
+      const error = new Error("Keplr - Rejected");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Keplr - Rejected"]);
+    });
+  });
+
   describe("Error Message Extraction", () => {
     it("should extract message from standard Error object", async () => {
       const error = new Error("INSUFFICIENT_FUNDS: not enough ETH");
@@ -385,9 +543,9 @@ describe("LOCAL_ERROR_MAP", () => {
     });
   });
 
-  it("should have at least 100 error patterns", () => {
+  it("should have at least 200 error patterns", () => {
     const count = Object.keys(LOCAL_ERROR_MAP).length;
-    expect(count).toBeGreaterThanOrEqual(100);
+    expect(count).toBeGreaterThanOrEqual(200);
   });
 });
 
@@ -395,6 +553,6 @@ describe("getLocalErrorCount", () => {
   it("should return the correct count of error patterns", () => {
     const count = getLocalErrorCount();
     expect(count).toBe(Object.keys(LOCAL_ERROR_MAP).length);
-    expect(count).toBeGreaterThanOrEqual(100);
+    expect(count).toBeGreaterThanOrEqual(200);
   });
 });
