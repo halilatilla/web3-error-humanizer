@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  Web3ErrorHumanizer,
+  type HumanizerConfig,
   LOCAL_ERROR_MAP,
-  HumanizerConfig,
-  SwapContext,
+  type SwapContext,
+  Web3ErrorHumanizer,
   getLocalErrorCount,
   humanizeError,
-  humanizeErrorLocal,
   humanizeErrorDetailed,
+  humanizeErrorLocal,
 } from "./index";
 
 // Mock OpenAI
@@ -155,7 +155,7 @@ describe("Web3ErrorHumanizer", () => {
       const error = new Error("replacement transaction underpriced");
       const result = await humanizer.humanize(error);
       expect(result).toBe(
-        LOCAL_ERROR_MAP["replacement transaction underpriced"],
+        LOCAL_ERROR_MAP["replacement transaction underpriced"]
       );
     });
   });
