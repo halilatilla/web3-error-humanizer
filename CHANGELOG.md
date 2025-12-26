@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/halilatilla/web3-error-humanizer/compare/v1.1.0...v1.1.1) (2025-12-26)
+
+
+### Bug Fixes
+
+* reduce package size by 66% (remove sourcemaps, add minification) ([ed9cd41](https://github.com/halilatilla/web3-error-humanizer/commit/ed9cd4183aa3433484c98e1d52cd9329ebc1506a))
+
 # [1.1.0](https://github.com/halilatilla/web3-error-humanizer/compare/v1.0.0...v1.1.0) (2025-12-26)
 
 
