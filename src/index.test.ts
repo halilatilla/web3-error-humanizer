@@ -114,9 +114,7 @@ describe("Web3ErrorHumanizer", () => {
     it("should handle transfer amount exceeds balance", async () => {
       const error = new Error("transfer amount exceeds balance");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(
-        LOCAL_ERROR_MAP["transfer amount exceeds balance"]
-      );
+      expect(result).toBe(LOCAL_ERROR_MAP["transfer amount exceeds balance"]);
     });
   });
 
@@ -157,7 +155,7 @@ describe("Web3ErrorHumanizer", () => {
       const error = new Error("replacement transaction underpriced");
       const result = await humanizer.humanize(error);
       expect(result).toBe(
-        LOCAL_ERROR_MAP["replacement transaction underpriced"]
+        LOCAL_ERROR_MAP["replacement transaction underpriced"],
       );
     });
   });
