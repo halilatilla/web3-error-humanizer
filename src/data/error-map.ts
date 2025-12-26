@@ -28,7 +28,6 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "user rejected transaction": "You cancelled the transaction in your wallet.",
   "user rejected signing": "You cancelled the signing request.",
   "Request rejected": "You declined the request in your wallet.",
-  "4001": "You declined the request in your wallet.",
   "User cancelled": "You cancelled the transaction.",
   "User closed": "You closed the wallet popup without completing the action.",
   "Rejected by user": "You declined the request.",
@@ -47,6 +46,51 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "burn amount exceeds balance":
     "You're trying to burn more tokens than you have.",
   InsufficientBalance: "Your balance is too low for this transaction.",
+
+  // ============================================
+  // Aave V3 / Lending Pool Errors (VL_*)
+  // ============================================
+  VL_BORROWING_NOT_ENABLED:
+    "Borrowing is disabled for this asset right now.",
+  VL_SUPPLY_CAP_EXCEEDED:
+    "Supply cap reached for this asset. Try a smaller deposit or wait.",
+  VL_BORROW_CAP_EXCEEDED:
+    "Borrow cap reached for this asset. Try a smaller amount or another asset.",
+  VL_COLLATERAL_CANNOT_COVER_NEW_BORROW:
+    "Not enough collateral for this borrow. Add more collateral or reduce amount.",
+  VL_HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD:
+    "Position is too risky. Add collateral or reduce your borrow.",
+  VL_COLLATERAL_BALANCE_IS_ZERO:
+    "You have no collateral for this position. Supply collateral first.",
+  VL_TRANSFER_NOT_ALLOWED:
+    "Transfer blocked because the asset is used as collateral or frozen.",
+  VL_INVALID_HEALTH_FACTOR:
+    "Health factor is invalid. Refresh your position and try again.",
+  VL_LIQUIDATION_CALL_FAILED:
+    "Liquidation could not be executed. Check position or try again later.",
+  SAFECAST_OVERFLOW:
+    "Internal math overflow. Try again with updated parameters or smaller size.",
+
+  // ============================================
+  // ERC-6093 Standard Custom Errors
+  // ============================================
+  ERC20InsufficientBalance:
+    "Your token balance is too low for this transaction.",
+  ERC20InvalidSender: "Invalid sender address for this token transaction.",
+  ERC20InvalidReceiver: "Invalid recipient address for this token transaction.",
+  ERC20InsufficientAllowance:
+    "You need to approve more tokens before this transaction.",
+  ERC20InvalidApprover: "Invalid address used for token approval.",
+  ERC20InvalidSpender: "Invalid spender address for token approval.",
+  ERC721InvalidOwner: "You do not own this NFT.",
+  ERC721InvalidSender: "You are not authorized to send this NFT.",
+  ERC721InvalidReceiver: "Invalid recipient address for this NFT.",
+  ERC721InsufficientApproval: "You need to approve this NFT transfer first.",
+  ERC721IncorrectOwner: "The NFT is not owned by the expected address.",
+  ERC1155InsufficientBalance: "You do not have enough of these tokens/NFTs.",
+  ERC1155InvalidSender: "You are not authorized to send these tokens.",
+  ERC1155InvalidReceiver: "Invalid recipient address for these tokens.",
+  ERC1155InsufficientApproval: "You need to approve this transfer first.",
 
   // ============================================
   // Allowance / Approval Errors
@@ -175,6 +219,44 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   ReturnAmountIsNotEnough: "Price moved too much. Increase slippage tolerance.",
   "Min return not reached":
     "Minimum return not met. Increase your slippage tolerance.",
+  "1inch: insufficient output amount":
+    "Price moved too much. Increase slippage tolerance.",
+  "1inch: insufficient input amount":
+    "Input amount too small. Try a larger amount.",
+  "1inch: insufficient liquidity":
+    "Not enough liquidity. Try a smaller amount.",
+  "1inch: expired": "Quote expired. Please try again.",
+  "1inch: transfer failed": "Token transfer failed. Check your approval.",
+  // Curve Finance Errors
+  "Curve: insufficient output":
+    "Price moved too much. Increase slippage tolerance.",
+  "Curve: insufficient input": "Input amount too small. Try a larger amount.",
+  "Curve: insufficient liquidity": "Not enough liquidity for this trade.",
+  "Curve: expired": "Quote expired. Please try again.",
+  "Curve: slippage": "Price moved beyond your slippage tolerance.",
+  "Curve: math error": "Calculation error. Please try again.",
+  // Balancer Errors
+  "Balancer: insufficient output":
+    "Price moved too much. Increase slippage tolerance.",
+  "Balancer: insufficient input":
+    "Input amount too small. Try a larger amount.",
+  "Balancer: insufficient liquidity": "Not enough liquidity for this trade.",
+  "Balancer: expired": "Quote expired. Please try again.",
+  "Balancer: paused": "Pool is paused. Please try again later.",
+  "Balancer: swap disabled": "Swap is disabled for this pool.",
+  // DODO Errors
+  "DODO: insufficient output":
+    "Price moved too much. Increase slippage tolerance.",
+  "DODO: insufficient input": "Input amount too small. Try a larger amount.",
+  "DODO: insufficient liquidity": "Not enough liquidity for this trade.",
+  "DODO: expired": "Quote expired. Please try again.",
+  // KyberSwap Errors
+  "KyberSwap: insufficient output":
+    "Price moved too much. Increase slippage tolerance.",
+  "KyberSwap: insufficient input":
+    "Input amount too small. Try a larger amount.",
+  "KyberSwap: insufficient liquidity": "Not enough liquidity for this trade.",
+  "KyberSwap: expired": "Quote expired. Please try again.",
 
   // ============================================
   // Gas Related Errors
@@ -225,6 +307,34 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "invalid opcode":
     "Smart contract error. Please try again or contact support.",
   "stack too deep": "Smart contract error. Please try again.",
+  NOT_IMPLEMENTED: "This feature is not implemented yet.",
+  UNSUPPORTED_OPERATION: "This operation is not supported.",
+  SERVER_ERROR: "Server error occurred. Please try again.",
+  BAD_DATA: "Invalid data provided. Please check your inputs.",
+  CANCELLED: "The operation was cancelled.",
+  BUFFER_OVERRUN: "Buffer overflow error. Please try again.",
+  NUMERIC_FAULT: "Numeric calculation error. Please check your values.",
+  INVALID_ARGUMENT: "Invalid argument provided. Please check your inputs.",
+  MISSING_ARGUMENT:
+    "Required argument is missing. Please provide all required parameters.",
+  UNEXPECTED_ARGUMENT:
+    "Unexpected argument provided. Please check your inputs.",
+  VALUE_MISMATCH: "Value mismatch error. Please check your inputs.",
+  UNCONFIGURED_NAME: "Name not configured. Please check your configuration.",
+  OFFCHAIN_FAULT: "Off-chain error occurred. Please try again.",
+
+  // ============================================
+  // Solidity Panic Codes (0x...)
+  // ============================================
+  "0x01": "Assertion failed. Internal contract error.",
+  "0x11": "Arithmetic error: Number too big or too small (overflow/underflow).",
+  "0x12": "Division by zero error.",
+  "0x21": "Invalid number conversion (enum conversion failed).",
+  "0x22": "Data storage error (incorrectly encoded storage byte array).",
+  "0x31": "Empty array pop error.",
+  "0x32": "Array index out of bounds exception.",
+  "0x41": "Memory allocation error (too much memory requested).",
+  "0x51": "Internal function call error (zero-initialized variable).",
 
   // ============================================
   // Network / Connection Errors
@@ -244,23 +354,35 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "network does not support": "This feature is not supported on this network.",
 
   // ============================================
-  // RPC Errors (EIP-1193)
+  // RPC Errors (EIP-1193 & EIP-1474)
   // ============================================
-  "-32700": "Invalid request format. Please try again.",
+  "-32700": "Invalid request format (Parse Error). Please try again.",
   "-32600": "Invalid request. Please try again.",
   "-32601": "Method not supported by your wallet.",
   "-32602": "Invalid parameters. Please check your inputs.",
-  "-32603": "Internal error. Please try again.",
+  "-32603": "Internal JSON-RPC error. Please try again.",
   "-32000": "Server error. Please try again.",
   "-32001": "Resource not found. Please try again.",
   "-32002": "Request already pending. Please wait.",
   "-32003": "Transaction rejected by the network.",
   "-32004": "Method not supported.",
   "-32005": "Request limit exceeded. Please wait and try again.",
+  "-32006": "Request limit exceeded. Please wait and try again.",
+  "4001": "You declined the request in your wallet.",
   "4100": "Wallet is locked or the requested method is not authorized.",
   "4200": "This method is not supported by your wallet.",
   "4900": "Wallet is disconnected. Please reconnect.",
   "4901": "Wallet is connected to a different network. Please switch networks.",
+  "5000": "User rejected the request.",
+  "5001": "Chain ID does not match.",
+  // Viem-specific errors
+  InternalRpcError: "Internal RPC error. Please try again.",
+  HttpRequestError: "HTTP request failed. Please check your connection.",
+  InvalidInputError: "Invalid input provided. Please check your parameters.",
+  TransactionNotFoundError:
+    "Transaction not found. Please check the transaction hash.",
+  BlockNotFoundError: "Block not found. Please check the block number or hash.",
+  LogNotFoundError: "Log not found. Please check your query parameters.",
 
   // ============================================
   // WalletConnect / Reown Errors
@@ -538,6 +660,39 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "Unsupported chain": "This chain is not supported for this operation.",
   "Chain mismatch": "Your wallet is on the wrong network. Please switch.",
   "Invalid destination": "Invalid destination chain or address.",
+  "Bridge paused": "Bridge is paused. Please try again later.",
+
+  // ============================================
+  // LayerZero / Messaging Bridges
+  // ============================================
+  "LayerZero: not enough native for fees":
+    "Not enough native token to pay bridge fees. Add gas and retry.",
+  "LayerZero: destination chain is not a trusted remote":
+    "Destination chain is not trusted. Check the target chain and retry.",
+  "LayerZero: invalid payload":
+    "Bridge payload invalid. Retry the transaction or contact support.",
+  "LayerZero: message blocked. please retry on destination":
+    "Bridge message blocked. Retry on the destination chain.",
+
+  // ============================================
+  // Arbitrum Retryables
+  // ============================================
+  "retryable ticket expired":
+    "Arbitrum retryable expired. Re-send the transaction or re-create the ticket.",
+  "insufficient submission cost":
+    "L1 submission cost too low. Increase max fee and retry.",
+  "max gas too low":
+    "Not enough gas for L2 execution. Increase gas limit and retry.",
+  "oversize data":
+    "Transaction data too large for Arbitrum. Reduce calldata size.",
+
+  // ============================================
+  // OP Stack / Optimism
+  // ============================================
+  "L2 execution failed":
+    "Execution failed on L2. Increase gas or check the contract call.",
+  "fee too low to cover L1 data":
+    "Base fee too low to pay L1 data costs. Increase the fee and retry.",
 
   // ============================================
   // Ledger / Hardware Wallet Errors
@@ -599,7 +754,6 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   // ============================================
   "Keplr - Rejected": "You declined the request in Keplr.",
   "Request rejected by user": "You declined the request.",
-  "Chain not supported": "This chain is not supported by your wallet.",
   "Failed to retrieve account":
     "Could not get account from Keplr. Please reconnect.",
   "Key not found": "Account not found. Please add this chain to Keplr.",
@@ -630,4 +784,93 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "Account changed": "Your wallet account changed. Please verify.",
   "Chain changed": "Your wallet network changed.",
   "Wallet disconnected": "Wallet was disconnected. Please reconnect.",
+  // ============================================
+  // Additional Common Error Patterns
+  // ============================================
+  "Invalid chain": "Invalid blockchain network. Please switch networks.",
+  "Chain not supported": "This blockchain is not supported.",
+  "Invalid token": "Invalid token address. Please check the token.",
+  "Token not found": "Token not found on this network.",
+  "Pair not found": "Trading pair not found. Please check the tokens.",
+  "Route not found": "No swap route found. Try different tokens.",
+  "Price impact too high": "Price impact is too high. Try a smaller amount.",
+  "Minimum amount not met": "Amount is below the minimum. Try a larger amount.",
+  "Maximum amount exceeded":
+    "Amount exceeds the maximum. Try a smaller amount.",
+  "Pool not found": "Liquidity pool not found. Please check the tokens.",
+  "Pool paused": "This pool is paused. Please try again later.",
+  "Pool closed": "This pool is closed. Please try a different pool.",
+  "Invalid deadline": "Transaction deadline is invalid. Please try again.",
+  "Deadline too short":
+    "Transaction deadline is too short. Please increase it.",
+  "Invalid recipient": "Invalid recipient address. Please check the address.",
+  "Invalid sender": "Invalid sender address. Please check your wallet.",
+  "Invalid amount": "Invalid amount specified. Please check your input.",
+  "Amount too small": "Amount is too small. Please try a larger amount.",
+  "Amount too large": "Amount is too large. Please try a smaller amount.",
+  "Zero amount": "Amount cannot be zero. Please specify an amount.",
+  "Same token": "Cannot swap the same token. Please select different tokens.",
+  "Invalid path": "Invalid swap path. Please try again.",
+  "Path too long": "Swap path is too long. Please try a simpler route.",
+  "Path not found": "No swap path found. Please try different tokens.",
+  // ============================================
+  // Layer 2 / Rollup Errors
+  // ============================================
+  "L2: insufficient balance":
+    "Insufficient balance on Layer 2. Please bridge funds.",
+  "L2: deposit pending": "Deposit to Layer 2 is still pending. Please wait.",
+  "L2: withdrawal pending":
+    "Withdrawal from Layer 2 is still pending. Please wait.",
+  "L2: bridge error": "Bridge error occurred. Please try again.",
+  "L2: not available":
+    "Layer 2 feature is not available. Please try again later.",
+  // ============================================
+  // Staking / DeFi Protocol Errors
+  // ============================================
+  "Staking: insufficient balance": "Insufficient balance for staking.",
+  "Staking: already staked": "You have already staked. Please unstake first.",
+  "Staking: not staked": "You have not staked yet. Please stake first.",
+  "Staking: locked":
+    "Staking is locked. Please wait for the lock period to end.",
+  "Staking: paused": "Staking is paused. Please try again later.",
+  "Rewards: not available": "Rewards are not available yet. Please wait.",
+  "Rewards: already claimed": "Rewards have already been claimed.",
+  "Vesting: locked": "Tokens are still vesting. Please wait.",
+  "Vesting: not started": "Vesting has not started yet. Please wait.",
+  // ============================================
+  // NFT / ERC721 Errors
+  // ============================================
+  "NFT: not owner": "You do not own this NFT.",
+  "NFT: not approved": "NFT transfer is not approved. Please approve first.",
+  "NFT: already minted": "This NFT has already been minted.",
+  "NFT: minting paused": "NFT minting is paused. Please try again later.",
+  "NFT: max supply reached": "Maximum supply reached. No more NFTs available.",
+  "NFT: invalid token ID": "Invalid NFT token ID. Please check the token ID.",
+  "NFT: not found": "NFT not found. Please check the token ID.",
+  // ============================================
+  // Multi-sig / Safe Errors
+  // ============================================
+  "Multisig: insufficient signatures":
+    "Not enough signatures. More signatures required.",
+  "Multisig: duplicate signature": "Duplicate signature detected.",
+  "Multisig: invalid signature": "Invalid signature provided.",
+  "Multisig: threshold not met": "Signature threshold not met.",
+  "Multisig: owner not found": "Owner not found in the multisig wallet.",
+  // ============================================
+  // Oracle / Price Feed Errors
+  // ============================================
+  "Oracle: price not available":
+    "Price data is not available. Please try again.",
+  "Oracle: stale price": "Price data is stale. Please refresh.",
+  "Oracle: price too old": "Price data is too old. Please refresh.",
+  "Oracle: invalid price": "Invalid price data. Please try again.",
+  // ============================================
+  // Flash Loan Errors
+  // ============================================
+  "Flash loan: insufficient liquidity": "Not enough liquidity for flash loan.",
+  "Flash loan: callback failed":
+    "Flash loan callback failed. Please check your contract.",
+  "Flash loan: not repaid": "Flash loan was not repaid. Please repay the loan.",
+  "Flash loan: invalid amount":
+    "Invalid flash loan amount. Please check your request.",
 };
