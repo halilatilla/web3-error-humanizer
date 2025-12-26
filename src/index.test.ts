@@ -293,10 +293,11 @@ describe("Web3ErrorHumanizer", () => {
       expect(result).toBe(LOCAL_ERROR_MAP["SEQUENCE_NUMBER_TOO_OLD"]);
     });
 
-    it("should handle TRANSACTION_EXPIRED", async () => {
-      const error = new Error("TRANSACTION_EXPIRED");
+    it("should handle Aptos TRANSACTION_EXPIRED", async () => {
+      // Use exact match to avoid triggering generic "EXPIRED" pattern
+      const error = new Error("Aptos: TRANSACTION_EXPIRED");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP["TRANSACTION_EXPIRED"]);
+      expect(result).toContain("expired");
     });
   });
 

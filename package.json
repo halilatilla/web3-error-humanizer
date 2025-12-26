@@ -20,11 +20,22 @@
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
     "dev": "tsup src/index.ts --format cjs,esm --watch --dts",
     "test": "vitest",
+    "test:run": "vitest run",
     "test:local": "tsx examples/test-local.ts",
     "lint": "biome check src",
     "lint:fix": "biome check --write src",
     "format": "biome format --write src",
-    "format:check": "biome format src"
+    "format:check": "biome format src",
+    "prepublishOnly": "npm run test:run && npm run build",
+    "release": "semantic-release",
+    "release:dry": "semantic-release --dry-run",
+    "release:patch": "npm version patch && npm publish",
+    "release:minor": "npm version minor && npm publish",
+    "release:major": "npm version major && npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/halilatilla/web3-error-humanizer.git"
   },
   "keywords": [
     "web3",
@@ -43,6 +54,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "semantic-release": "^24.2.9",
     "tsup": "^8.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5.0.0",
