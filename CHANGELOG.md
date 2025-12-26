@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/halilatilla/web3-error-humanizer/compare/v1.0.0...v1.1.0) (2025-12-26)
+
+
+### Features
+
+* add hasLocalPattern and getLocalPatterns helper functions ([0208bdc](https://github.com/halilatilla/web3-error-humanizer/commit/0208bdc05904452c571dde2e9ac6a544d2790920))
+
 # 1.0.0 (2025-12-26)
 
 
