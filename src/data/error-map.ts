@@ -529,6 +529,16 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "Invalid BOC": "Invalid transaction data. Please try again.",
   "Not enough TON": "Not enough TON for this transaction.",
   "Not enough balance": "Insufficient balance for this transaction.",
+  "Cell underflow":
+    "Transaction data mismatch (cellUnderflow). Please check your parameters and try again.",
+  "Cell overflow":
+    "Transaction data is too large (cellOverflow). Please check your parameters and try again.",
+  "Invalid seqno":
+    "Transaction sequence number is incorrect. Please try again.",
+  "Bounced transaction":
+    "Transaction was rejected and bounced back. Please check your transaction parameters.",
+  "Invalid fees":
+    "Transaction fees are insufficient. Please increase the fee amount and try again.",
 
   // ============================================
   // Tron / TronLink Errors
@@ -579,6 +589,22 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   PackageNotFound: "Package not found. Please check the address.",
   DynamicFieldNotFound: "Dynamic field not found.",
   InvalidPublicKey: "Invalid public key provided.",
+  ModuleNotFound:
+    "Contract module not found. Please verify the contract details.",
+  FunctionNotFound:
+    "The requested contract function is not found. Please check your transaction parameters.",
+  GasComputationError:
+    "Unable to calculate gas fees. Please try again or contact support.",
+  ConsensusError:
+    "Network consensus validation failed. Please try again in a moment.",
+  InvalidObjectOwner:
+    "Invalid object owner. Please check your transaction parameters.",
+  ObjectVersionNotFound:
+    "Object version not found. Please check your transaction parameters.",
+  InvalidObjectType:
+    "Invalid object type. Please check your transaction parameters.",
+  InvalidObjectId:
+    "Invalid object ID. Please check your transaction parameters.",
 
   // ============================================
   // Aptos Wallet Errors
@@ -879,6 +905,59 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "Invalid path": "Invalid swap path. Please try again.",
   "Path too long": "Swap path is too long. Please try a simpler route.",
   "Path not found": "No swap path found. Please try different tokens.",
+  // Validation Errors
+  "recipient address is required":
+    "Recipient address is required. Please enter the recipient's wallet address.",
+  "amount must be greater than 0": "Please enter an amount greater than 0.",
+  "token chain id is required":
+    "Network information is missing. Please select the correct network for this token.",
+  "token address is required":
+    "Token address is required. Please provide a token contract address.",
+  "token decimals is required":
+    "Token decimal is required. Please provide the correct token details.",
+  "wallet not connected or chain not selected":
+    "Wallet not connected or network not selected. Please connect your wallet and choose the correct network.",
+  "fee rate unavailable":
+    "Unable to calculate transaction fees. Please try again in a moment.",
+  "missing exchange params":
+    "Exchange parameters are missing. Please refresh the page and try again.",
+  "exchange order failed":
+    "Exchange order could not be completed. Please try again or contact support.",
+  // Bitcoin / UTXO Errors
+  "utxo fetch failed":
+    "Unable to calculate transaction fees (UTXO). Please try again in a moment.",
+  "psbt signing failed":
+    "Bitcoin transaction signing failed (PSBT). Please try signing the transaction again.",
+  "invalid signed psbt":
+    "Invalid Bitcoin transaction signature (PSBT). Please sign the transaction again.",
+  // EVM Additional Errors
+  "has not been authorized by the user":
+    "Wallet connection issue detected. Please disconnect and reconnect your wallet.",
+  "fail swap, not enough fee":
+    "Swap failed due to insufficient funds. Please ensure you have enough funds to complete the transaction.",
+  "insufficient native currency sent":
+    "Not enough native currency was sent with the transaction. Please check the required amount and try again.",
+  "stack limit reached":
+    "Stack limit reached. This might be due to complex operations or infinite loops. Please try again with a simpler operation.",
+  "method handler crashed":
+    "There is an error in the operation. Please try again.",
+  "execution timeout":
+    "Transaction took too long to execute. Please try again.",
+  "filter not found": "Filter expired. Please try again.",
+  "attempting to switch chain":
+    "Unable to switch to the required network. Please manually switch networks in your wallet.",
+  // Additional RPC Error Codes
+  "-32009": "Debug requests are currently limited. Please try again later.",
+  "-32010": "Transaction cost exceeds gas limit. Please increase gas limit.",
+  "-32011":
+    "Network connection error. Please check your connection and try again.",
+  "-32015":
+    "Smart contract execution failed. Please check your transaction parameters and try again.",
+  "-32612": "Custom traces are not available.",
+  "-32613": "Requested trace type not allowed.",
+  LogRangeLimited:
+    "Too many blocks requested at once (limit: 10,000). Please reduce the block range.",
+  CustomTracesBlocked: "Custom traces are not available.",
   // ============================================
   // Layer 2 / Rollup Errors
   // ============================================
