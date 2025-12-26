@@ -127,6 +127,22 @@ if (message) {
 }
 ```
 
+#### `humanizeErrorDetailed(error, fallback?)`
+
+Local-only humanization that also returns metadata (matched key, source, raw message).
+
+```typescript
+import { humanizeErrorDetailed } from "web3-error-humanizer";
+
+const result = humanizeErrorDetailed(error);
+// {
+//   message: "Price moved too much. Try increasing your slippage tolerance.",
+//   source: "local",
+//   matchedKey: "INSUFFICIENT_OUTPUT_AMOUNT",
+//   rawMessage: "INSUFFICIENT_OUTPUT_AMOUNT"
+// }
+```
+
 ### Class-based API (Optional AI Fallback)
 
 #### `new Web3ErrorHumanizer(config?)`
@@ -151,6 +167,10 @@ const humanizer = new Web3ErrorHumanizer({
 // Check if AI is enabled
 console.log(humanizer.hasAI); // true or false
 ```
+
+#### `humanizer.humanizeDetailed(error, context?)`
+
+Returns `{ message, source, matchedKey?, rawMessage }`. Uses local dictionary first, then AI (if configured), otherwise the fallback message.
 
 #### `humanizer.humanize(error, context?)`
 

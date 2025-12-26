@@ -7,6 +7,7 @@ import {
   getLocalErrorCount,
   humanizeError,
   humanizeErrorLocal,
+  humanizeErrorDetailed,
 } from "./index";
 
 // Mock OpenAI
@@ -107,13 +108,15 @@ describe("Web3ErrorHumanizer", () => {
     it("should handle insufficient allowance error", async () => {
       const error = new Error("ERC20: insufficient allowance");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP["insufficient allowance"]);
+      expect(result).toBe(LOCAL_ERROR_MAP["ERC20: insufficient allowance"]);
     });
 
     it("should handle transfer amount exceeds balance", async () => {
       const error = new Error("transfer amount exceeds balance");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP["exceeds balance"]);
+      expect(result).toBe(
+        LOCAL_ERROR_MAP["transfer amount exceeds balance"]
+      );
     });
   });
 
@@ -395,6 +398,25 @@ describe("Web3ErrorHumanizer", () => {
     });
   });
 
+  describe("humanizeDetailed (class)", () => {
+    it("should return source=local when matched", async () => {
+      const error = new Error("INSUFFICIENT_FUNDS");
+      const result = await humanizer.humanizeDetailed(error);
+      expect(result.source).toBe("local");
+      expect(result.matchedKey).toBe("INSUFFICIENT_FUNDS");
+      expect(result.message).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
+      expect(result.rawMessage).toContain("INSUFFICIENT_FUNDS");
+    });
+
+    it("should return source=ai when no local match and AI enabled", async () => {
+      const error = new Error("Unrecognized error code 12345");
+      const result = await humanizer.humanizeDetailed(error);
+      expect(result.source).toBe("ai");
+      expect(result.message).toBe("AI generated response");
+      expect(result.rawMessage).toContain("Unrecognized error code 12345");
+    });
+  });
+
   describe("Configuration", () => {
     it("should use default model when not specified", () => {
       const config: HumanizerConfig = { openaiApiKey: "test-key" };
@@ -505,6 +527,26 @@ describe("humanizeErrorLocal (standalone function)", () => {
     const error = new Error("UniswapV2: K");
     const result = humanizeErrorLocal(error);
     expect(result).toBe(LOCAL_ERROR_MAP["UniswapV2: K"]);
+  });
+});
+
+describe("humanizeErrorDetailed (standalone function)", () => {
+  it("should include metadata for local matches", () => {
+    const error = new Error("ACTION_REJECTED");
+    const result = humanizeErrorDetailed(error);
+    expect(result.source).toBe("local");
+    expect(result.matchedKey).toBe("ACTION_REJECTED");
+    expect(result.message).toBe(LOCAL_ERROR_MAP["ACTION_REJECTED"]);
+    expect(result.rawMessage.toLowerCase()).toContain("action_rejected");
+  });
+
+  it("should return fallback metadata when no local match", () => {
+    const error = new Error("Completely unknown failure 999");
+    const result = humanizeErrorDetailed(error, "Fallback test");
+    expect(result.source).toBe("fallback");
+    expect(result.matchedKey).toBeUndefined();
+    expect(result.message).toBe("Fallback test");
+    expect(result.rawMessage).toContain("Completely unknown failure 999");
   });
 });
 

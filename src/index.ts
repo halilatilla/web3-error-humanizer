@@ -25,6 +25,27 @@ export interface SwapContext {
   network?: string;
 }
 
+export type HumanizeSource = "local" | "ai" | "fallback";
+
+export interface HumanizedResult {
+  /**
+   * Human-readable message
+   */
+  message: string;
+  /**
+   * Where the message came from
+   */
+  source: HumanizeSource;
+  /**
+   * The matched local error key (when source === "local")
+   */
+  matchedKey?: string;
+  /**
+   * The extracted raw error message
+   */
+  rawMessage: string;
+}
+
 /**
  * Comprehensive error map covering:
  * - Ethers.js error codes
@@ -659,6 +680,31 @@ const LOCAL_ERROR_MAP: Record<string, string> = {
 
 const DEFAULT_FALLBACK_MESSAGE = "Transaction failed. Please try again.";
 
+type LocalErrorEntry = {
+  key: string;
+  keyLower: string;
+  message: string;
+  isCode: boolean;
+  isShortToken: boolean;
+};
+
+const normalize = (value: string) => value.trim().toLowerCase();
+
+const LOCAL_ERROR_ENTRIES: LocalErrorEntry[] = Object.entries(
+  LOCAL_ERROR_MAP
+).map(([key, message]) => {
+  const keyLower = normalize(key);
+  const hasSeparator = /[\s:._-]/.test(keyLower);
+  const isCode = /^-?\d+$/.test(keyLower);
+  const isShortToken = keyLower.length < 4 && !hasSeparator && !isCode;
+  return { key, keyLower, message, isCode, isShortToken };
+});
+
+// Sort by length so more specific patterns win over generic substrings
+const SORTED_LOCAL_ERROR_ENTRIES = [...LOCAL_ERROR_ENTRIES].sort(
+  (a, b) => b.keyLower.length - a.keyLower.length
+);
+
 /**
  * Extract raw message from complex Web3 error objects
  */
@@ -698,14 +744,33 @@ function extractRawMessage(error: unknown): string {
 }
 
 /**
- * Match error message against local dictionary
+ * Match error message against local dictionary with safer precedence:
+ * - Exact code match (e.g., "4001")
+ * - Exact phrase match (case-insensitive)
+ * - Substring match (case-insensitive), excluding very short tokens to reduce false positives
  */
-function matchLocalError(rawMessage: string): string | null {
-  for (const [key, humanText] of Object.entries(LOCAL_ERROR_MAP)) {
-    if (rawMessage.toLowerCase().includes(key.toLowerCase())) {
-      return humanText;
+function matchLocalErrorDetailed(
+  rawMessage: string
+): { matchedKey: string; message: string } | null {
+  const normalized = normalize(rawMessage);
+
+  for (const entry of SORTED_LOCAL_ERROR_ENTRIES) {
+    // Exact code match
+    if (entry.isCode && normalized === entry.keyLower) {
+      return { matchedKey: entry.key, message: entry.message };
+    }
+
+    // Exact phrase match
+    if (normalized === entry.keyLower) {
+      return { matchedKey: entry.key, message: entry.message };
+    }
+
+    // Substring match (skip short generic tokens to avoid false positives)
+    if (!entry.isShortToken && normalized.includes(entry.keyLower)) {
+      return { matchedKey: entry.key, message: entry.message };
     }
   }
+
   return null;
 }
 
@@ -723,7 +788,8 @@ function matchLocalError(rawMessage: string): string | null {
  */
 export function humanizeErrorLocal(error: unknown): string | null {
   const rawMessage = extractRawMessage(error);
-  return matchLocalError(rawMessage);
+  const match = matchLocalErrorDetailed(rawMessage);
+  return match ? match.message : null;
 }
 
 /**
@@ -739,6 +805,33 @@ export function humanizeError(
   fallback: string = DEFAULT_FALLBACK_MESSAGE
 ): string {
   return humanizeErrorLocal(error) ?? fallback;
+}
+
+/**
+ * Humanize an error and return metadata about the result.
+ * Does NOT call AI (local only); falls back to provided message when no match.
+ */
+export function humanizeErrorDetailed(
+  error: unknown,
+  fallback: string = DEFAULT_FALLBACK_MESSAGE
+): HumanizedResult {
+  const rawMessage = extractRawMessage(error);
+  const match = matchLocalErrorDetailed(rawMessage);
+
+  if (match) {
+    return {
+      message: match.message,
+      source: "local",
+      matchedKey: match.matchedKey,
+      rawMessage,
+    };
+  }
+
+  return {
+    message: fallback,
+    source: "fallback",
+    rawMessage,
+  };
 }
 
 /**
@@ -781,24 +874,49 @@ export class Web3ErrorHumanizer {
   }
 
   /**
+   * Humanize an error with metadata.
+   * Local dictionary first, then AI (if configured), else fallback.
+   */
+  async humanizeDetailed(
+    error: unknown,
+    context?: SwapContext
+  ): Promise<HumanizedResult> {
+    const rawMessage = extractRawMessage(error);
+
+    const localMatch = matchLocalErrorDetailed(rawMessage);
+    if (localMatch) {
+      return {
+        message: localMatch.message,
+        matchedKey: localMatch.matchedKey,
+        source: "local",
+        rawMessage,
+      };
+    }
+
+    if (this.openai) {
+      const message = await this.askAI(rawMessage, context);
+      return {
+        message,
+        source: "ai",
+        rawMessage,
+      };
+    }
+
+    return {
+      message: this.fallbackMessage,
+      source: "fallback",
+      rawMessage,
+    };
+  }
+
+  /**
    * Main method to humanize an error.
    * First checks local dictionary (free & instant).
    * Falls back to AI if available, otherwise returns fallback message.
    */
   async humanize(error: unknown, context?: SwapContext): Promise<string> {
-    const rawMessage = extractRawMessage(error);
-
-    // 1. Check Local Heuristics first (Fast & Free)
-    const localMatch = matchLocalError(rawMessage);
-    if (localMatch) return localMatch;
-
-    // 2. Fallback to AI if available
-    if (this.openai) {
-      return await this.askAI(rawMessage, context);
-    }
-
-    // 3. No AI available, return fallback
-    return this.fallbackMessage;
+    const result = await this.humanizeDetailed(error, context);
+    return result.message;
   }
 
   private async askAI(
@@ -809,20 +927,19 @@ export class Web3ErrorHumanizer {
       return this.fallbackMessage;
     }
 
-    const prompt = `
-      You are a Web3 UX expert. A user's DEX swap failed with a technical error. 
-      Convert it into a friendly, helpful 1-sentence explanation.
+    const prompt = `You are a Web3 UX expert. A user's DEX swap failed with a technical error.
+Convert it into a friendly, helpful 1-sentence explanation.
 
-      TECHNICAL ERROR: "${rawError}"
-      CONTEXT: ${context ? JSON.stringify(context) : "No context provided"}
+TECHNICAL ERROR: "${rawError}"
+CONTEXT: ${context ? JSON.stringify(context) : "No context provided"}
 
-      RULES:
-      - Do NOT use technical jargon like "reverted", "gas limit", "0x...", or "nonce".
-      - Explain WHY it happened (e.g. low liquidity, price volatility, lack of funds).
-      - Tell the user exactly what to do next.
-      - Keep it under 20 words.
-      
-      Humanized Message:`;
+RULES:
+- Do NOT use technical jargon like "reverted", "gas limit", "0x...", or "nonce".
+- Explain WHY it happened (e.g. low liquidity, price volatility, lack of funds).
+- Tell the user exactly what to do next.
+- Keep it under 20 words.
+
+Humanized Message:`;
 
     try {
       const response = await this.openai.chat.completions.create({
