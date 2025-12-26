@@ -50,8 +50,7 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   // ============================================
   // Aave V3 / Lending Pool Errors (VL_*)
   // ============================================
-  VL_BORROWING_NOT_ENABLED:
-    "Borrowing is disabled for this asset right now.",
+  VL_BORROWING_NOT_ENABLED: "Borrowing is disabled for this asset right now.",
   VL_SUPPLY_CAP_EXCEEDED:
     "Supply cap reached for this asset. Try a smaller deposit or wait.",
   VL_BORROW_CAP_EXCEEDED:
@@ -91,6 +90,21 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   ERC1155InvalidSender: "You are not authorized to send these tokens.",
   ERC1155InvalidReceiver: "Invalid recipient address for these tokens.",
   ERC1155InsufficientApproval: "You need to approve this transfer first.",
+
+  // ============================================
+  // ERC-4337 EntryPoint Errors (Account Abstraction)
+  // ============================================
+  AA10: "Account already exists. You cannot initialize it again.",
+  AA13: "Wallet creation failed. Check if your factory has enough gas.",
+  AA20: "Smart account not deployed yet. Please ensure the first transaction includes initCode.",
+  AA21: "You don't have enough native tokens to pay for this transaction's gas.",
+  AA23: "Transaction validation failed. This usually means the signature is wrong or gas is too low.",
+  AA24: "Signature error. Your wallet couldn't verify the transaction author.",
+  AA25: "Transaction sequence error. Another transaction from this account might be pending.",
+  AA31: "The gas sponsor (Paymaster) has run out of funds. Try again later.",
+  AA33: "Gas sponsorship was rejected. You might not meet the sponsor's criteria.",
+  AA40: "Transaction verification took too much gas. Try increasing the gas limit.",
+  AA51: "Execution failed after validation. The smart contract logic reverted.",
 
   // ============================================
   // Allowance / Approval Errors
@@ -180,6 +194,24 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "UniswapV3: F0": "Flash loan callback failed for token0.",
   "UniswapV3: F1": "Flash loan callback failed for token1.",
   Old: "Quote expired. Please refresh and try again.",
+
+  // ============================================
+  // Uniswap V4 / Hook Errors
+  // ============================================
+  "UniswapV4: LOK": "The pool is locked. A hook might be preventing re-entry.",
+  "UniswapV4: TLU":
+    "Price range error. The lower limit is higher than the upper limit.",
+  "UniswapV4: SPL":
+    "Price limit reached. The trade would move the price too far.",
+  "UniswapV4: IIA":
+    "Insufficient input amount. The swap didn't send enough tokens to the pool.",
+  "UniswapV4: AS": "The trade amount cannot be zero.",
+  "UniswapV4: M0": "The pool doesn't have enough of the first token (Token0).",
+  "UniswapV4: M1": "The pool doesn't have enough of the second token (Token1).",
+  HookReverted:
+    "A custom logic 'hook' attached to this pool failed. Try a different route.",
+  FeeTooHigh:
+    "The dynamic fee set by the pool's hook is too high for this trade.",
 
   // ============================================
   // PancakeSwap Errors
@@ -458,6 +490,19 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   AccountNotFound: "The specified account doesn't exist.",
   InstructionError: "Transaction instruction failed. Please check your inputs.",
   InvalidAccountData: "Invalid account data. Please try again.",
+  // Solana / Jupiter Aggregator Errors
+  "0x1771":
+    "Price moved beyond your slippage limit on Solana. Try increasing it.",
+  "0x1788": "Jupiter route calculation error. Try refreshing the quote.",
+  "0x1":
+    "Solana program error. Usually indicates insufficient funds or invalid instruction.",
+  "0x1770": "The liquidity pool has changed. Refresh the page for a new quote.",
+  "Slippage tolerance exceeded":
+    "Price changed too fast. Increase your slippage tolerance.",
+  "Compute budget exceeded":
+    "The transaction is too complex for Solana. Try a simpler route.",
+  BlockhashNotFound:
+    "Transaction expired. Solana network is busy, please try again.",
 
   // ============================================
   // TON / TonConnect Errors
@@ -673,6 +718,20 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
     "Bridge payload invalid. Retry the transaction or contact support.",
   "LayerZero: message blocked. please retry on destination":
     "Bridge message blocked. Retry on the destination chain.",
+  "LayerZero: LzTokenUnavailable":
+    "The bridge does not have enough liquidity of this token right now.",
+  // Li.Fi / Stargate Bridge Errors
+  "1001":
+    "No route found. Your address might not have enough balance for any available bridge.",
+  "1007":
+    "Slippage error on the bridge. The exchange rate changed during the transfer.",
+  NOT_PROCESSABLE_REFUND_NEEDED:
+    "The bridge failed due to price movement. A refund has been triggered.",
+  AMOUNT_TOO_LOW: "The amount is too small to bridge. Please send more.",
+  AMOUNT_TOO_HIGH:
+    "This bridge has a limit. Try a smaller amount or a different bridge.",
+  "Stargate: Not enough liquidity":
+    "The destination chain's pool is low on funds. Try again later.",
 
   // ============================================
   // Arbitrum Retryables
@@ -684,7 +743,7 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "max gas too low":
     "Not enough gas for L2 execution. Increase gas limit and retry.",
   "oversize data":
-    "Transaction data too large for Arbitrum. Reduce calldata size.",
+    "Transaction data too large for Arbitrum. Reduce transaction size.",
 
   // ============================================
   // OP Stack / Optimism
@@ -748,6 +807,13 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
     "More signatures are needed for this Safe transaction.",
   "Threshold not reached":
     "Not enough owners have signed this Safe transaction.",
+  // Gnosis Safe / Safe Global Errors
+  GS000: "Safe initialization failed. Check your setup parameters.",
+  GS013:
+    "The transaction within your Safe failed. One of the contract calls reverted.",
+  GS025: "Transaction hash not approved. Owners need to sign the same data.",
+  GS026: "Invalid owner provided. The address is not part of this Safe.",
+  GS031: "The Safe is locked for this operation. Try again shortly.",
 
   // ============================================
   // Keplr / Cosmos Wallet Errors
@@ -873,4 +939,15 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "Flash loan: not repaid": "Flash loan was not repaid. Please repay the loan.",
   "Flash loan: invalid amount":
     "Invalid flash loan amount. Please check your request.",
+
+  // ============================================
+  // Solidity Custom Error Selectors (Hex)
+  // ============================================
+  "0x08c379a0": "The transaction reverted with a reason string.",
+  "0x4e487b71":
+    "The transaction panicked (arithmetic overflow or division by zero).",
+  "0x8baa579f": "Insufficient balance for this swap.",
+  "0xf4844814":
+    "Slippage error: The amount out is less than your minimum requirement.",
+  "0x31a57e3b": "The deadline for this transaction has passed.",
 };
