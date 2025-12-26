@@ -1,3 +1,10 @@
+# 1.0.0 (2025-12-26)
+
+
+### Features
+
+* add 100+ wallet error patterns for Solana, TON, Tron, Sui, Aptos ([ba4e45b](https://github.com/halilatilla/web3-error-humanizer/commit/ba4e45b049a628b5f917ef77e9c5c6950f1ca40c))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -62,4 +69,3 @@ All notable changes to this project will be documented in this file.
 - viem integration for error extraction
 - Dual module support (ESM & CommonJS)
 - TypeScript definitions
-
