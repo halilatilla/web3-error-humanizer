@@ -5,6 +5,8 @@ import {
   type SwapContext,
   Web3ErrorHumanizer,
   getLocalErrorCount,
+  getLocalPatterns,
+  hasLocalPattern,
   humanizeError,
   humanizeErrorDetailed,
   humanizeErrorLocal,
@@ -595,5 +597,28 @@ describe("getLocalErrorCount", () => {
     const count = getLocalErrorCount();
     expect(count).toBe(Object.keys(LOCAL_ERROR_MAP).length);
     expect(count).toBeGreaterThanOrEqual(200);
+  });
+});
+
+describe("hasLocalPattern", () => {
+  it("should return true for existing patterns", () => {
+    expect(hasLocalPattern("INSUFFICIENT_FUNDS")).toBe(true);
+    expect(hasLocalPattern("ACTION_REJECTED")).toBe(true);
+    expect(hasLocalPattern("4001")).toBe(true);
+  });
+
+  it("should return false for non-existing patterns", () => {
+    expect(hasLocalPattern("RANDOM_NONEXISTENT_ERROR")).toBe(false);
+    expect(hasLocalPattern("")).toBe(false);
+  });
+});
+
+describe("getLocalPatterns", () => {
+  it("should return an array of all pattern keys", () => {
+    const patterns = getLocalPatterns();
+    expect(Array.isArray(patterns)).toBe(true);
+    expect(patterns.length).toBe(getLocalErrorCount());
+    expect(patterns).toContain("INSUFFICIENT_FUNDS");
+    expect(patterns).toContain("ACTION_REJECTED");
   });
 });

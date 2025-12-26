@@ -265,3 +265,17 @@ Humanized Message:`;
 export function getLocalErrorCount(): number {
   return Object.keys(LOCAL_ERROR_MAP).length;
 }
+
+/**
+ * Check if an error pattern exists in the local dictionary
+ */
+export function hasLocalPattern(pattern: string): boolean {
+  return pattern in LOCAL_ERROR_MAP;
+}
+
+/**
+ * Get all supported error patterns (keys only)
+ */
+export function getLocalPatterns(): string[] {
+  return Object.keys(LOCAL_ERROR_MAP);
+}

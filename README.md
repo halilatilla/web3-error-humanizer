@@ -4,6 +4,8 @@
 
 [![npm version](https://img.shields.io/npm/v/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/web3-error-humanizer)](https://bundlephobia.com/package/web3-error-humanizer)
 
 When a DEX swap fails, users see messages like `INSUFFICIENT_OUTPUT_AMOUNT` or `execution reverted: Pancake: K`. This library translates those into actionable, plain-English explanations.
 
