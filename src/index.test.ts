@@ -1,29 +1,37 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Web3ErrorHumanizer, LOCAL_ERROR_MAP, HumanizerConfig, SwapContext } from './index';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  Web3ErrorHumanizer,
+  LOCAL_ERROR_MAP,
+  HumanizerConfig,
+  SwapContext,
+  getLocalErrorCount,
+  humanizeError,
+  humanizeErrorLocal,
+} from "./index";
 
 // Mock OpenAI
 const mockCreate = vi.fn().mockResolvedValue({
-  choices: [{ message: { content: 'AI generated response' } }]
+  choices: [{ message: { content: "AI generated response" } }],
 });
 
-vi.mock('openai', () => {
+vi.mock("openai", () => {
   return {
     OpenAI: class MockOpenAI {
       chat = {
         completions: {
-          create: mockCreate
-        }
+          create: mockCreate,
+        },
       };
       constructor() {}
-    }
+    },
   };
 });
 
-describe('Web3ErrorHumanizer', () => {
+describe("Web3ErrorHumanizer", () => {
   let humanizer: Web3ErrorHumanizer;
   const mockConfig: HumanizerConfig = {
-    openaiApiKey: 'test-api-key',
-    aiModel: 'gpt-4o-mini'
+    openaiApiKey: "test-api-key",
+    aiModel: "gpt-4o-mini",
   };
 
   beforeEach(() => {
@@ -31,100 +39,216 @@ describe('Web3ErrorHumanizer', () => {
     humanizer = new Web3ErrorHumanizer(mockConfig);
   });
 
-  describe('Local Dictionary Matching', () => {
-    it('should return local message for INSUFFICIENT_FUNDS error', async () => {
-      const error = new Error('INSUFFICIENT_FUNDS');
+  describe("Local Dictionary Matching", () => {
+    it("should return local message for INSUFFICIENT_FUNDS error", async () => {
+      const error = new Error("INSUFFICIENT_FUNDS");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP['INSUFFICIENT_FUNDS']);
+      expect(result).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
     });
 
-    it('should return local message for ACTION_REJECTED error', async () => {
-      const error = new Error('User ACTION_REJECTED the transaction');
+    it("should return local message for ACTION_REJECTED error", async () => {
+      const error = new Error("User ACTION_REJECTED the transaction");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP['ACTION_REJECTED']);
+      expect(result).toBe(LOCAL_ERROR_MAP["ACTION_REJECTED"]);
     });
 
-    it('should return local message for EXPIRED error', async () => {
-      const error = new Error('Transaction EXPIRED');
+    it("should return local message for EXPIRED error", async () => {
+      const error = new Error("Transaction EXPIRED");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP['EXPIRED']);
+      expect(result).toBe(LOCAL_ERROR_MAP["EXPIRED"]);
     });
 
-    it('should return local message for INSUFFICIENT_OUTPUT_AMOUNT error', async () => {
-      const error = new Error('INSUFFICIENT_OUTPUT_AMOUNT');
+    it("should return local message for INSUFFICIENT_OUTPUT_AMOUNT error", async () => {
+      const error = new Error("INSUFFICIENT_OUTPUT_AMOUNT");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP['INSUFFICIENT_OUTPUT_AMOUNT']);
+      expect(result).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_OUTPUT_AMOUNT"]);
     });
 
-    it('should return local message for TRANSFER_FROM_FAILED error', async () => {
-      const error = new Error('TRANSFER_FROM_FAILED');
+    it("should return local message for TRANSFER_FROM_FAILED error", async () => {
+      const error = new Error("TRANSFER_FROM_FAILED");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP['TRANSFER_FROM_FAILED']);
+      expect(result).toBe(LOCAL_ERROR_MAP["TRANSFER_FROM_FAILED"]);
     });
 
-    it('should return local message for Pancake: K error', async () => {
-      const error = new Error('Pancake: K');
+    it("should return local message for Pancake: K error", async () => {
+      const error = new Error("Pancake: K");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP['Pancake: K']);
+      expect(result).toBe(LOCAL_ERROR_MAP["Pancake: K"]);
+    });
+
+    it("should match case-insensitively", async () => {
+      const error = new Error("insufficient_funds");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
     });
   });
 
-  describe('Error Message Extraction', () => {
-    it('should extract message from standard Error object', async () => {
-      const error = new Error('INSUFFICIENT_FUNDS: not enough ETH');
+  describe("Uniswap Errors", () => {
+    it("should handle UniswapV2: K error", async () => {
+      const error = new Error("UniswapV2: K");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP['INSUFFICIENT_FUNDS']);
+      expect(result).toBe(LOCAL_ERROR_MAP["UniswapV2: K"]);
     });
 
-    it('should extract reason from ethers-style error', async () => {
-      const error = { reason: 'INSUFFICIENT_FUNDS' };
+    it("should handle UniswapV2Router: EXPIRED error", async () => {
+      const error = new Error("UniswapV2Router: EXPIRED");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP['INSUFFICIENT_FUNDS']);
+      expect(result).toBe(LOCAL_ERROR_MAP["UniswapV2Router: EXPIRED"]);
     });
 
-    it('should extract message from nested data object', async () => {
-      const error = { data: { message: 'INSUFFICIENT_OUTPUT_AMOUNT' } };
+    it("should handle UniswapV2: LOCKED error", async () => {
+      const error = new Error("UniswapV2: LOCKED");
       const result = await humanizer.humanize(error);
-      expect(result).toBe(LOCAL_ERROR_MAP['INSUFFICIENT_OUTPUT_AMOUNT']);
+      expect(result).toBe(LOCAL_ERROR_MAP["UniswapV2: LOCKED"]);
+    });
+  });
+
+  describe("ERC20 Errors", () => {
+    it("should handle insufficient allowance error", async () => {
+      const error = new Error("ERC20: insufficient allowance");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["insufficient allowance"]);
     });
 
-    it('should handle null/undefined gracefully', async () => {
+    it("should handle transfer amount exceeds balance", async () => {
+      const error = new Error("transfer amount exceeds balance");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["exceeds balance"]);
+    });
+  });
+
+  describe("RPC Error Codes", () => {
+    it("should handle EIP-1193 error code 4001 (user rejected)", async () => {
+      const error = { code: 4001, message: "User rejected the request" };
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["4001"]);
+    });
+
+    it("should handle error code -32603 (internal error)", async () => {
+      const error = { code: -32603, message: "Internal JSON-RPC error" };
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["-32603"]);
+    });
+
+    it("should handle error code 4900 (disconnected)", async () => {
+      const error = { code: 4900, message: "Disconnected" };
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["4900"]);
+    });
+  });
+
+  describe("Gas Errors", () => {
+    it("should handle gas required exceeds allowance", async () => {
+      const error = new Error("gas required exceeds allowance");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["gas required exceeds allowance"]);
+    });
+
+    it("should handle out of gas error", async () => {
+      const error = new Error("out of gas");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["out of gas"]);
+    });
+
+    it("should handle replacement transaction underpriced", async () => {
+      const error = new Error("replacement transaction underpriced");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(
+        LOCAL_ERROR_MAP["replacement transaction underpriced"]
+      );
+    });
+  });
+
+  describe("Network Errors", () => {
+    it("should handle NETWORK_ERROR", async () => {
+      const error = new Error("NETWORK_ERROR occurred");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["NETWORK_ERROR"]);
+    });
+
+    it("should handle timeout errors", async () => {
+      const error = new Error("Request TIMEOUT");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["TIMEOUT"]);
+    });
+  });
+
+  describe("WalletConnect/Reown Errors", () => {
+    it("should handle session disconnected", async () => {
+      const error = new Error("Session disconnected");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Session disconnected"]);
+    });
+
+    it("should handle APKT006 (session expired code)", async () => {
+      const error = new Error("Error: APKT006");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["APKT006"]);
+    });
+
+    it("should handle USER_REJECTED", async () => {
+      const error = new Error("USER_REJECTED");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["USER_REJECTED"]);
+    });
+  });
+
+  describe("Error Message Extraction", () => {
+    it("should extract message from standard Error object", async () => {
+      const error = new Error("INSUFFICIENT_FUNDS: not enough ETH");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
+    });
+
+    it("should extract reason from ethers-style error", async () => {
+      const error = { reason: "INSUFFICIENT_FUNDS" };
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
+    });
+
+    it("should extract message from nested data object", async () => {
+      const error = { data: { message: "INSUFFICIENT_OUTPUT_AMOUNT" } };
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_OUTPUT_AMOUNT"]);
+    });
+
+    it("should handle null/undefined gracefully with AI", async () => {
       const result = await humanizer.humanize(null);
-      // Should fallback to AI since JSON.stringify(null) won't match any local error
-      expect(result).toBe('AI generated response');
+      expect(result).toBe("AI generated response");
     });
   });
 
-  describe('AI Fallback', () => {
-    it('should call AI for unknown errors', async () => {
-      const error = new Error('Unknown blockchain error XYZ123');
+  describe("AI Fallback", () => {
+    it("should call AI for unrecognized errors", async () => {
+      const error = new Error("Zx9Qw7Pm custom blockchain specific error");
       const result = await humanizer.humanize(error);
-      expect(result).toBe('AI generated response');
+      expect(result).toBe("AI generated response");
     });
 
-    it('should pass context to AI', async () => {
-      const error = new Error('Unknown error');
+    it("should pass context to AI", async () => {
+      const error = new Error("Abc123xyz novel error type");
       const context: SwapContext = {
-        fromToken: 'USDC',
-        toToken: 'ETH',
-        slippage: '0.5%'
+        fromToken: "USDC",
+        toToken: "ETH",
+        slippage: "0.5%",
       };
       const result = await humanizer.humanize(error, context);
-      expect(result).toBe('AI generated response');
+      expect(result).toBe("AI generated response");
     });
   });
 
-  describe('Configuration', () => {
-    it('should use default model when not specified', () => {
-      const config: HumanizerConfig = { openaiApiKey: 'test-key' };
+  describe("Configuration", () => {
+    it("should use default model when not specified", () => {
+      const config: HumanizerConfig = { openaiApiKey: "test-key" };
       const h = new Web3ErrorHumanizer(config);
       expect(h).toBeInstanceOf(Web3ErrorHumanizer);
+      expect(h.hasAI).toBe(true);
     });
 
-    it('should allow custom AI model', () => {
-      const config: HumanizerConfig = { 
-        openaiApiKey: 'test-key',
-        aiModel: 'gpt-4-turbo'
+    it("should allow custom AI model", () => {
+      const config: HumanizerConfig = {
+        openaiApiKey: "test-key",
+        aiModel: "gpt-4-turbo",
       };
       const h = new Web3ErrorHumanizer(config);
       expect(h).toBeInstanceOf(Web3ErrorHumanizer);
@@ -132,30 +256,145 @@ describe('Web3ErrorHumanizer', () => {
   });
 });
 
-describe('LOCAL_ERROR_MAP', () => {
-  it('should contain all expected error keys', () => {
+describe("Web3ErrorHumanizer - Local Only Mode", () => {
+  let humanizer: Web3ErrorHumanizer;
+
+  beforeEach(() => {
+    // Create without API key - local only mode
+    humanizer = new Web3ErrorHumanizer();
+  });
+
+  it("should work without API key", () => {
+    expect(humanizer).toBeInstanceOf(Web3ErrorHumanizer);
+    expect(humanizer.hasAI).toBe(false);
+  });
+
+  it("should return local match without API key", async () => {
+    const error = new Error("INSUFFICIENT_FUNDS");
+    const result = await humanizer.humanize(error);
+    expect(result).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
+  });
+
+  it("should return fallback for unknown errors without API key", async () => {
+    const error = new Error("Xyz123 completely unknown error");
+    const result = await humanizer.humanize(error);
+    expect(result).toBe("Transaction failed. Please try again.");
+  });
+
+  it("should use custom fallback message", async () => {
+    const customHumanizer = new Web3ErrorHumanizer({
+      fallbackMessage: "Custom fallback message",
+    });
+    const error = new Error("Xyz123 completely unknown error");
+    const result = await customHumanizer.humanize(error);
+    expect(result).toBe("Custom fallback message");
+  });
+
+  it("should work with empty config object", async () => {
+    const h = new Web3ErrorHumanizer({});
+    const error = new Error("INSUFFICIENT_FUNDS");
+    const result = await h.humanize(error);
+    expect(result).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
+  });
+});
+
+describe("humanizeError (standalone function)", () => {
+  it("should return human message for known errors", () => {
+    const error = new Error("INSUFFICIENT_FUNDS");
+    const result = humanizeError(error);
+    expect(result).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
+  });
+
+  it("should return default fallback for unknown errors", () => {
+    const error = new Error("Xyz123 completely unknown error");
+    const result = humanizeError(error);
+    expect(result).toBe("Transaction failed. Please try again.");
+  });
+
+  it("should use custom fallback message", () => {
+    const error = new Error("Xyz123 completely unknown error");
+    const result = humanizeError(error, "Custom message");
+    expect(result).toBe("Custom message");
+  });
+
+  it("should handle ethers-style errors", () => {
+    const error = { reason: "ACTION_REJECTED" };
+    const result = humanizeError(error);
+    expect(result).toBe(LOCAL_ERROR_MAP["ACTION_REJECTED"]);
+  });
+
+  it("should handle error codes", () => {
+    const error = { code: 4001, message: "User rejected" };
+    const result = humanizeError(error);
+    expect(result).toBe(LOCAL_ERROR_MAP["4001"]);
+  });
+});
+
+describe("humanizeErrorLocal (standalone function)", () => {
+  it("should return human message for known errors", () => {
+    const error = new Error("INSUFFICIENT_FUNDS");
+    const result = humanizeErrorLocal(error);
+    expect(result).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
+  });
+
+  it("should return null for unknown errors", () => {
+    const error = new Error("Xyz123 completely unknown error");
+    const result = humanizeErrorLocal(error);
+    expect(result).toBeNull();
+  });
+
+  it("should handle Uniswap errors", () => {
+    const error = new Error("UniswapV2: K");
+    const result = humanizeErrorLocal(error);
+    expect(result).toBe(LOCAL_ERROR_MAP["UniswapV2: K"]);
+  });
+});
+
+describe("LOCAL_ERROR_MAP", () => {
+  it("should contain all expected error keys", () => {
     const expectedKeys = [
-      'INSUFFICIENT_FUNDS',
-      'ACTION_REJECTED',
-      'EXPIRED',
-      'INSUFFICIENT_OUTPUT_AMOUNT',
-      'TRANSFER_FROM_FAILED',
-      'Pancake: K'
+      "INSUFFICIENT_FUNDS",
+      "ACTION_REJECTED",
+      "EXPIRED",
+      "INSUFFICIENT_OUTPUT_AMOUNT",
+      "TRANSFER_FROM_FAILED",
+      "Pancake: K",
+      "UniswapV2: K",
+      "UniswapV3: SPL",
+      "insufficient allowance",
+      "out of gas",
+      "4001",
+      "-32603",
+      "NETWORK_ERROR",
+      "Session expired",
     ];
-    
-    expectedKeys.forEach(key => {
+
+    expectedKeys.forEach((key) => {
       expect(LOCAL_ERROR_MAP).toHaveProperty(key);
-      expect(typeof LOCAL_ERROR_MAP[key]).toBe('string');
+      expect(typeof LOCAL_ERROR_MAP[key]).toBe("string");
     });
   });
 
-  it('should have user-friendly messages (no technical jargon)', () => {
-    const technicalTerms = ['0x', 'revert', 'nonce', 'wei', 'gwei'];
-    
-    Object.values(LOCAL_ERROR_MAP).forEach(message => {
-      technicalTerms.forEach(term => {
+  it("should have user-friendly messages (no technical jargon)", () => {
+    const technicalTerms = ["0x", "nonce", "wei", "gwei", "calldata"];
+
+    Object.values(LOCAL_ERROR_MAP).forEach((message) => {
+      technicalTerms.forEach((term) => {
         expect(message.toLowerCase()).not.toContain(term.toLowerCase());
       });
     });
+  });
+
+  it("should have at least 100 error patterns", () => {
+    const count = Object.keys(LOCAL_ERROR_MAP).length;
+    expect(count).toBeGreaterThanOrEqual(100);
+  });
+});
+
+describe("getLocalErrorCount", () => {
+  it("should return the correct count of error patterns", () => {
+    const count = getLocalErrorCount();
+    expect(count).toBe(Object.keys(LOCAL_ERROR_MAP).length);
+    expect(count).toBeGreaterThanOrEqual(100);
   });
 });
