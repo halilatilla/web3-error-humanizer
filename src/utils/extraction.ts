@@ -1,4 +1,3 @@
-import { BaseError, ContractFunctionRevertedError } from "viem";
 import { LOCAL_ERROR_MAP } from "../data/error-map";
 
 interface ErrorLike {
@@ -13,32 +12,51 @@ interface ErrorLike {
   };
   cause?: unknown;
   error?: ErrorLike | string;
+  walk?: (predicate: (err: unknown) => boolean) => unknown;
+}
+
+interface ViemRevertLike {
+  reason?: string;
+  shortMessage?: string;
+  message?: string;
+}
+
+function isViemBaseError(
+  error: unknown
+): error is Error &
+  ErrorLike & { walk: (fn: (err: unknown) => boolean) => unknown } {
+  return (
+    error instanceof Error &&
+    typeof (error as ErrorLike).walk === "function" &&
+    "shortMessage" in error
+  );
+}
+
+function isContractFunctionRevertedError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const name = (err as { name?: string }).name;
+  return name === "ContractFunctionRevertedError";
 }
 
 /**
- * Extract raw message from complex Web3 error objects
- * Supports: viem, ethers.js, web3.js, and generic error objects
+ * Extract raw message from complex Web3 error objects.
+ * Supports: viem, ethers.js, web3.js, and generic error objects.
  */
 export function extractRawMessage(error: unknown): string {
-  // Handle null/undefined
   if (error === null || error === undefined) {
     return "Unknown error";
   }
 
-  // Handle viem BaseError (most common)
-  if (error instanceof BaseError) {
-    const revertError = error.walk(
-      (err) => err instanceof ContractFunctionRevertedError
-    );
-    if (revertError instanceof ContractFunctionRevertedError) {
-      return revertError.reason || revertError.shortMessage || error.message;
+  if (isViemBaseError(error)) {
+    const revertError = error.walk(isContractFunctionRevertedError);
+    if (revertError && typeof revertError === "object") {
+      const revert = revertError as ViemRevertLike;
+      return revert.reason || revert.shortMessage || error.message;
     }
     return error.shortMessage || error.message;
   }
 
-  // Handle Error objects
   if (error instanceof Error) {
-    // Check for error.cause (Error chaining)
     if (error.cause) {
       const causeMessage = extractRawMessage(error.cause);
       if (causeMessage !== "Unknown error") {
@@ -48,11 +66,9 @@ export function extractRawMessage(error: unknown): string {
     return error.message;
   }
 
-  // Handle plain objects
   if (error && typeof error === "object") {
     const err = error as ErrorLike;
 
-    // Check for error code (EIP-1193)
     if (typeof err.code === "number" || typeof err.code === "string") {
       const codeStr = String(err.code);
       if (LOCAL_ERROR_MAP[codeStr]) {
@@ -60,7 +76,6 @@ export function extractRawMessage(error: unknown): string {
       }
     }
 
-    // Check common error properties in order of specificity
     if (typeof err.reason === "string" && err.reason) {
       return err.reason;
     }
@@ -83,7 +98,6 @@ export function extractRawMessage(error: unknown): string {
       return err.message;
     }
 
-    // Handle nested error objects
     if (err.error) {
       const nestedMessage = extractRawMessage(err.error);
       if (nestedMessage !== "Unknown error") {
@@ -91,7 +105,6 @@ export function extractRawMessage(error: unknown): string {
       }
     }
 
-    // Handle error.cause
     if (err.cause) {
       const causeMessage = extractRawMessage(err.cause);
       if (causeMessage !== "Unknown error") {
@@ -100,12 +113,10 @@ export function extractRawMessage(error: unknown): string {
     }
   }
 
-  // Handle strings
   if (typeof error === "string") {
     return error;
   }
 
-  // Fallback: try to stringify
   try {
     return JSON.stringify(error);
   } catch {

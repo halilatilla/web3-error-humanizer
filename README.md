@@ -1,23 +1,61 @@
 # web3-error-humanizer
 
-> Transform cryptic Web3 errors into human-friendly messages using AI and local heuristics.
+> Transform cryptic Web3 errors into human-friendly messages. 598+ local patterns, optional AI fallback.
 
 [![npm version](https://img.shields.io/npm/v/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
+[![npm downloads](https://img.shields.io/npm/dm/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/web3-error-humanizer)](https://bundlephobia.com/package/web3-error-humanizer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
-When a DEX swap fails, users see messages like `INSUFFICIENT_OUTPUT_AMOUNT` or `execution reverted: Pancake: K`. This library translates those into actionable, plain-English explanations.
+## Why?
+
+When a DEX swap fails, your users see this:
+
+```
+execution reverted: INSUFFICIENT_OUTPUT_AMOUNT
+```
+
+```
+Error: Pancake: K
+```
+
+```
+ContractFunctionRevertedError: UniswapV2: LOCKED
+```
+
+With this library, they see this instead:
+
+```
+Price moved too much. Try increasing your slippage tolerance.
+```
+
+```
+Low liquidity for this pair. Try a smaller swap amount.
+```
+
+```
+This pair is currently locked. Try again shortly.
+```
+
+**One import. Zero config. No API key required.**
+
+```typescript
+import { humanizeError } from "web3-error-humanizer";
+
+const message = humanizeError(error);
+// "Price moved too much. Try increasing your slippage tolerance."
+```
 
 ## Features
 
-- **598+ local error patterns** — Most errors are matched instantly without API calls (O(1) exact matches)
-- **AI fallback** — Unknown errors are analyzed by GPT-4o-mini for context-aware explanations
-- **viem integration** — Deep error extraction using `error.walk()` for nested blockchain errors
-- **Enhanced error extraction** — Supports error chains, nested errors, and multiple error formats
-- **Performance optimized** — Map-based lookups for instant exact matches
-- **Dual module support** — Works with both ESM (`import`) and CommonJS (`require`)
-- **TypeScript ready** — Full type definitions included
-- **Zero dependencies** (for local-only mode) — Works without API keys
+- **598+ local error patterns** -- Most errors matched instantly without API calls (O(1) exact matches)
+- **Zero dependencies** -- The main entry point has no runtime dependencies at all
+- **AI fallback** -- Unknown errors optionally analyzed by GPT-4o-mini (separate import)
+- **viem-compatible** -- Deep error extraction for nested blockchain errors (viem is optional)
+- **Extensible** -- Add your own error patterns with `addPattern()` / `addPatterns()`
+- **Dual module support** -- Works with both ESM (`import`) and CommonJS (`require`)
+- **TypeScript ready** -- Full type definitions included
 
 ## Supported Protocols
 
@@ -59,9 +97,11 @@ pnpm add web3-error-humanizer
 yarn add web3-error-humanizer
 ```
 
+> **Note:** The main entry point has zero dependencies. If you want AI fallback, install `openai` as well. If your app uses viem, the library will automatically detect and extract viem error details.
+
 ## Quick Start
 
-### Option 1: Local Only (No API Key Required) ✨
+### Option 1: Local Only (No API Key Required)
 
 ```typescript
 import { humanizeError } from "web3-error-humanizer";
@@ -71,19 +111,19 @@ try {
 } catch (error) {
   const message = humanizeError(error);
   console.log(message);
-  // → "Price moved too much. Try increasing your slippage tolerance."
+  // "Price moved too much. Try increasing your slippage tolerance."
 }
 ```
 
-**Zero cost, instant response, 598+ error patterns covered!**
+**Zero cost, instant response, 598+ error patterns covered.**
 
 ### Option 2: With AI Fallback
 
 ```typescript
-import { Web3ErrorHumanizer } from "web3-error-humanizer";
+import { Web3ErrorHumanizer } from "web3-error-humanizer/ai";
 
 const humanizer = new Web3ErrorHumanizer({
-  openaiApiKey: process.env.OPENAI_API_KEY!, // Optional!
+  openaiApiKey: process.env.OPENAI_API_KEY!,
 });
 
 try {
@@ -91,10 +131,12 @@ try {
 } catch (error) {
   const message = await humanizer.humanize(error);
   console.log(message);
-  // Local match → instant response
-  // Unknown error → AI generates response
+  // Local match -> instant response
+  // Unknown error -> AI generates response
 }
 ```
+
+> Requires `openai` as a peer dependency: `npm install openai`
 
 ## Usage with Context
 
@@ -108,12 +150,14 @@ const message = await humanizer.humanize(error, {
   slippage: "0.5%",
   network: "Ethereum",
 });
-// → "PEPE's price is changing rapidly. Increase slippage to 1-2% or try a smaller amount."
+// "PEPE's price is changing rapidly. Increase slippage to 1-2% or try a smaller amount."
 ```
 
 ## API Reference
 
 ### Standalone Functions (No API Key Required)
+
+Import from `web3-error-humanizer` (zero dependencies).
 
 #### `humanizeError(error, fallback?)`
 
@@ -160,11 +204,42 @@ const result = humanizeErrorDetailed(error);
 // }
 ```
 
+#### `addPattern(key, message)` / `addPatterns(map)`
+
+Add custom error patterns at runtime. Automatically rebuilds internal lookup indexes.
+
+```typescript
+import { addPattern, addPatterns } from "web3-error-humanizer";
+
+addPattern("CUSTOM_DEX_ERROR", "Your custom message here.");
+
+addPatterns({
+  "MyProtocol: SLIPPAGE": "Price moved. Increase slippage.",
+  "MyProtocol: LOCKED": "Pool is locked. Try again later.",
+});
+```
+
+#### `getLocalErrorCount()` / `hasLocalPattern(pattern)` / `getLocalPatterns()`
+
+```typescript
+import {
+  getLocalErrorCount,
+  hasLocalPattern,
+  getLocalPatterns,
+} from "web3-error-humanizer";
+
+console.log(getLocalErrorCount()); // 598+
+console.log(hasLocalPattern("INSUFFICIENT_FUNDS")); // true
+console.log(getLocalPatterns()); // ["ACTION_REJECTED", "INSUFFICIENT_FUNDS", ...]
+```
+
 ### Class-based API (Optional AI Fallback)
+
+Import from `web3-error-humanizer/ai`. Requires `openai` as a peer dependency.
 
 #### `new Web3ErrorHumanizer(config?)`
 
-Creates a new humanizer instance. Config is optional!
+Creates a new humanizer instance. Config is optional.
 
 | Parameter                | Type     | Required | Description                           |
 | ------------------------ | -------- | -------- | ------------------------------------- |
@@ -173,7 +248,9 @@ Creates a new humanizer instance. Config is optional!
 | `config.fallbackMessage` | `string` | No       | Message when no local match and no AI |
 
 ```typescript
-// Local only - no API key needed!
+import { Web3ErrorHumanizer } from "web3-error-humanizer/ai";
+
+// Local only - no API key needed
 const humanizer = new Web3ErrorHumanizer();
 
 // With AI fallback
@@ -181,13 +258,8 @@ const humanizer = new Web3ErrorHumanizer({
   openaiApiKey: process.env.OPENAI_API_KEY,
 });
 
-// Check if AI is enabled
 console.log(humanizer.hasAI); // true or false
 ```
-
-#### `humanizer.humanizeDetailed(error, context?)`
-
-Returns `{ message, source, matchedKey?, rawMessage }`. Uses local dictionary first, then AI (if configured), otherwise the fallback message.
 
 #### `humanizer.humanize(error, context?)`
 
@@ -198,7 +270,11 @@ Translates a Web3 error into a human-readable message.
 | `error`   | `unknown`     | The caught error object (viem, ethers, or generic) |
 | `context` | `SwapContext` | Optional swap details for smarter AI responses     |
 
-**Returns:** `Promise<string>` — The human-friendly error message.
+**Returns:** `Promise<string>` -- The human-friendly error message.
+
+#### `humanizer.humanizeDetailed(error, context?)`
+
+Returns `{ message, source, matchedKey?, rawMessage }`. Uses local dictionary first, then AI (if configured), otherwise the fallback message.
 
 ### `SwapContext`
 
@@ -212,14 +288,22 @@ interface SwapContext {
 }
 ```
 
-### `getLocalErrorCount()`
+## How It Works
 
-Returns the number of locally supported error patterns.
-
-```typescript
-import { getLocalErrorCount } from "web3-error-humanizer";
-console.log(getLocalErrorCount()); // 598+
+```mermaid
+flowchart TD
+    A["Caught Error"] --> B["Extract Message"]
+    B --> C{"Local Dictionary\n598+ patterns"}
+    C -->|match found| D["Instant Response\nfree, less than 1ms"]
+    C -->|no match| E{"AI configured?"}
+    E -->|yes| F["OpenAI API\npaid, ~500ms"]
+    E -->|no| G["Fallback Message"]
 ```
+
+1. **Extract** -- Pulls the raw error message from viem `BaseError`, ethers error objects, EIP-1193 codes, or plain strings
+2. **Match locally** -- O(1) exact lookup via `Map`, then substring matching sorted by specificity
+3. **AI fallback** -- If no local match and OpenAI is configured, generates a user-friendly explanation
+4. **Fallback** -- Returns a configurable default message if nothing else matches
 
 ## Supported Error Categories
 
@@ -309,44 +393,20 @@ console.log(getLocalErrorCount()); // 598+
 | `AMOUNT_TOO_LOW`                | The amount is too small to bridge. Please send more.                         |
 | `retryable ticket expired`      | Arbitrum retryable expired. Re-send the transaction or re-create the ticket. |
 
-## How It Works
-
-```
-┌─────────────────┐
-│  Caught Error   │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Extract Message │  ← Uses viem's error.walk() for nested errors
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐     ┌──────────────────┐
-│ Local Dictionary│────▶│ Instant Response │  (free, <1ms)
-│   (598+ errors) │     └──────────────────┘
-└────────┬────────┘
-         │ no match
-         ▼
-┌─────────────────┐     ┌──────────────────┐
-│   OpenAI API    │────▶│ AI-Generated Msg │  (paid, ~500ms)
-└─────────────────┘     └──────────────────┘
-```
-
 ## Framework Examples
 
 ### Next.js / React (Secure - Recommended)
 
-**⚠️ Security Note:** Never expose your OpenAI API key in the browser. Use a server-side API route:
+**Security Note:** Never expose your OpenAI API key in the browser. Use a server-side API route:
 
 **1. Create API Route (`app/api/humanize-error/route.ts`):**
 
 ```typescript
 import { NextRequest, NextResponse } from "next/server";
-import { Web3ErrorHumanizer } from "web3-error-humanizer";
+import { Web3ErrorHumanizer } from "web3-error-humanizer/ai";
 
 const humanizer = new Web3ErrorHumanizer({
-  openaiApiKey: process.env.OPENAI_API_KEY!, // Server-side only
+  openaiApiKey: process.env.OPENAI_API_KEY!,
 });
 
 export async function POST(request: NextRequest) {
@@ -360,9 +420,21 @@ export async function POST(request: NextRequest) {
 
 ```typescript
 // lib/humanize-error.ts
-export async function humanizeError(error: unknown, context?: SwapContext) {
-  const errorMessage = error instanceof Error ? error.message : String(error);
+import { humanizeError } from "web3-error-humanizer";
 
+export async function humanizeSwapError(
+  error: unknown,
+  context?: SwapContext
+) {
+  // Try local match first (instant, no network)
+  const localResult = humanizeError(error);
+  if (localResult !== "Transaction failed. Please try again.") {
+    return localResult;
+  }
+
+  // Fall back to AI via server
+  const errorMessage =
+    error instanceof Error ? error.message : String(error);
   const response = await fetch("/api/humanize-error", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -378,14 +450,17 @@ export async function humanizeError(error: unknown, context?: SwapContext) {
 
 ```tsx
 "use client";
-import { humanizeError } from "@/lib/humanize-error";
+import { humanizeSwapError } from "@/lib/humanize-error";
 
 export function SwapButton() {
   const handleSwap = async () => {
     try {
       await contract.write.swap([...]);
     } catch (err) {
-      const message = await humanizeError(err, { fromToken: "ETH", toToken: "USDC" });
+      const message = await humanizeSwapError(err, {
+        fromToken: "ETH",
+        toToken: "USDC",
+      });
       toast.error(message);
     }
   };
@@ -395,11 +470,11 @@ export function SwapButton() {
 ### Node.js Backend
 
 ```typescript
-import { Web3ErrorHumanizer } from "web3-error-humanizer";
+import { Web3ErrorHumanizer } from "web3-error-humanizer/ai";
 
 const humanizer = new Web3ErrorHumanizer({
   openaiApiKey: process.env.OPENAI_API_KEY!,
-  aiModel: "gpt-4-turbo", // use a more powerful model
+  aiModel: "gpt-4-turbo",
 });
 
 app.post("/api/swap", async (req, res) => {
@@ -416,53 +491,32 @@ app.post("/api/swap", async (req, res) => {
 ### CommonJS
 
 ```javascript
-const { Web3ErrorHumanizer } = require("web3-error-humanizer");
+const { humanizeError } = require("web3-error-humanizer");
 
-const humanizer = new Web3ErrorHumanizer({
-  openaiApiKey: process.env.OPENAI_API_KEY,
-});
-```
-
-## Extending the Local Dictionary
-
-You can import and extend the local error map:
-
-```typescript
-import { LOCAL_ERROR_MAP, getLocalErrorCount } from "web3-error-humanizer";
-
-// Check current coverage
-console.log(`Supported patterns: ${getLocalErrorCount()}`); // 598+
-
-// Add your own mappings
-LOCAL_ERROR_MAP["CUSTOM_DEX_ERROR"] = "Your custom message here.";
-LOCAL_ERROR_MAP["MyProtocol: SLIPPAGE"] = "Price moved. Increase slippage.";
+// Or with AI:
+// const { Web3ErrorHumanizer } = require("web3-error-humanizer/ai");
 ```
 
 ## Cost Optimization
 
 The library is designed to minimize API costs:
 
-1. **Local-first** — 598+ error patterns never hit the API
-2. **Performance optimized** — O(1) exact matches using Map-based lookups
-3. **Concise prompts** — AI requests use minimal tokens (max 100 tokens)
-4. **gpt-4o-mini default** — Uses the most cost-effective model
-5. **Retry logic** — Automatic retry with exponential backoff for rate limits
+1. **Local-first** -- 598+ error patterns never hit the API
+2. **Performance optimized** -- O(1) exact matches using Map-based lookups
+3. **Concise prompts** -- AI requests use minimal tokens (max 100 tokens)
+4. **gpt-4o-mini default** -- Uses the most cost-effective model
+5. **Retry logic** -- Automatic retry with exponential backoff for rate limits
 
 For high-volume applications, consider:
 
-- Adding more patterns to the local dictionary
+- Adding more patterns with `addPattern()` / `addPatterns()`
 - Caching AI responses for repeated errors (not included, but easy to add)
 - Using a faster/cheaper model via `aiModel` config
 
-## Requirements
-
-- Node.js 18+ or modern browser
-- OpenAI API key (optional - only needed for AI fallback)
-
 ## Performance
 
-- **Exact matches**: O(1) using Map lookups (~170x faster than before)
-- **Substring matches**: O(n) but optimized with pre-sorted entries
+- **Exact matches**: O(1) using Map lookups
+- **Substring matches**: O(n) but optimized with pre-sorted entries (longest first)
 - **Error extraction**: Handles nested errors, error chains, and multiple formats
 - **Normalization**: Unicode-aware with diacritic removal for better matching
 
@@ -482,6 +536,10 @@ The library covers errors from:
 - **Bitcoin**: UTXO errors, PSBT signing, transaction validation
 - **Validation**: Input validation errors, parameter requirements, address validation
 - **Additional RPC**: Extended RPC error codes (-32009 to -32015, -32612, -32613)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add error patterns and submit pull requests.
 
 ## License
 

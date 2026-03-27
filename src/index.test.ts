@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  type HumanizerConfig,
   LOCAL_ERROR_MAP,
-  type SwapContext,
-  Web3ErrorHumanizer,
+  addPattern,
+  addPatterns,
   getLocalErrorCount,
   getLocalPatterns,
   hasLocalPattern,
@@ -11,8 +10,10 @@ import {
   humanizeErrorDetailed,
   humanizeErrorLocal,
 } from "./index";
+import type { HumanizerConfig, SwapContext } from "./types";
 
-// Mock OpenAI
+import { Web3ErrorHumanizer } from "./ai";
+
 const mockCreate = vi.fn().mockResolvedValue({
   choices: [{ message: { content: "AI generated response" } }],
 });
@@ -296,7 +297,6 @@ describe("Web3ErrorHumanizer", () => {
     });
 
     it("should handle Aptos TRANSACTION_EXPIRED", async () => {
-      // Use exact match to avoid triggering generic "EXPIRED" pattern
       const error = new Error("Aptos: TRANSACTION_EXPIRED");
       const result = await humanizer.humanize(error);
       expect(result).toContain("expired");
@@ -441,7 +441,6 @@ describe("Web3ErrorHumanizer - Local Only Mode", () => {
   let humanizer: Web3ErrorHumanizer;
 
   beforeEach(() => {
-    // Create without API key - local only mode
     humanizer = new Web3ErrorHumanizer();
   });
 
@@ -620,5 +619,29 @@ describe("getLocalPatterns", () => {
     expect(patterns.length).toBe(getLocalErrorCount());
     expect(patterns).toContain("INSUFFICIENT_FUNDS");
     expect(patterns).toContain("ACTION_REJECTED");
+  });
+});
+
+describe("addPattern / addPatterns", () => {
+  it("should add a single pattern and make it matchable", () => {
+    const key = "TEST_CUSTOM_ERROR_SINGLE_12345";
+    addPattern(key, "Custom single test message.");
+    expect(hasLocalPattern(key)).toBe(true);
+    const result = humanizeError(new Error(key));
+    expect(result).toBe("Custom single test message.");
+  });
+
+  it("should add multiple patterns at once", () => {
+    const patterns = {
+      TEST_BATCH_A_67890: "Batch message A.",
+      TEST_BATCH_B_67890: "Batch message B.",
+    };
+    addPatterns(patterns);
+    expect(humanizeError(new Error("TEST_BATCH_A_67890"))).toBe(
+      "Batch message A."
+    );
+    expect(humanizeError(new Error("TEST_BATCH_B_67890"))).toBe(
+      "Batch message B."
+    );
   });
 });

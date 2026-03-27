@@ -1,5 +1,3 @@
-import { OpenAI } from "openai";
-
 export interface HumanizerConfig {
   /**
    * OpenAI API key. Optional - if not provided, only local dictionary will be used.

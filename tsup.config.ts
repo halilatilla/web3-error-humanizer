@@ -1,12 +1,11 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ["src/index.ts", "src/ai.ts"],
   splitting: false,
-  sourcemap: false, // Removed to reduce package size
+  sourcemap: false,
   clean: true,
-  format: ['cjs', 'esm'],
+  format: ["cjs", "esm"],
   dts: true,
-  minify: true, // Minify to further reduce size
+  minify: true,
 });
-

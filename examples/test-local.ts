@@ -6,7 +6,8 @@
  * Note: Set OPENAI_API_KEY environment variable for AI fallback tests
  */
 
-import { Web3ErrorHumanizer, LOCAL_ERROR_MAP } from "../src/index";
+import { LOCAL_ERROR_MAP } from "../src/index";
+import { Web3ErrorHumanizer } from "../src/ai";
 
 // Test without API key (local dictionary only)
 async function testLocalDictionary() {
