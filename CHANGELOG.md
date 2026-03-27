@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/halilatilla/web3-error-humanizer/compare/v2.3.0...v2.3.1) (2026-03-27)
+
+
+### Bug Fixes
+
+* harden matching flow and polish package release surface ([0f7df16](https://github.com/halilatilla/web3-error-humanizer/commit/0f7df16cf301b8e9d53e723807434183519aaf8b))
+
 # [2.3.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.2.0...v2.3.0) (2026-03-27)
 
 
@@ -61,4 +68,3 @@
 ### Features
 
 * add 100+ wallet error patterns for Solana, TON, Tron, Sui, Aptos ([ba4e45b](https://github.com/halilatilla/web3-error-humanizer/commit/ba4e45b049a628b5f917ef77e9c5c6950f1ca40c))
-
