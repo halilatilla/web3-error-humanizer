@@ -355,6 +355,60 @@ describe("Web3ErrorHumanizer", () => {
     });
   });
 
+  describe("Viem Error Class Names", () => {
+    it("should handle UserRejectedRequestError", async () => {
+      const error = new Error("UserRejectedRequestError: request denied");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["UserRejectedRequestError"]);
+    });
+
+    it("should handle ContractFunctionExecutionError", async () => {
+      const error = new Error("ContractFunctionExecutionError: failed");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["ContractFunctionExecutionError"]);
+    });
+
+    it("should handle ContractFunctionRevertedError", async () => {
+      const error = new Error("ContractFunctionRevertedError: reverted");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["ContractFunctionRevertedError"]);
+    });
+
+    it("should handle EstimateGasExecutionError", async () => {
+      const error = new Error("EstimateGasExecutionError: estimation failed");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["EstimateGasExecutionError"]);
+    });
+
+    it("should handle WaitForTransactionReceiptTimeoutError", async () => {
+      const error = new Error(
+        "WaitForTransactionReceiptTimeoutError: timed out"
+      );
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(
+        LOCAL_ERROR_MAP["WaitForTransactionReceiptTimeoutError"]
+      );
+    });
+
+    it("should handle ChainDisconnectedError", async () => {
+      const error = new Error("ChainDisconnectedError");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["ChainDisconnectedError"]);
+    });
+
+    it("should handle LimitExceededRpcError", async () => {
+      const error = new Error("LimitExceededRpcError: too many requests");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["LimitExceededRpcError"]);
+    });
+
+    it("should handle SwitchChainError", async () => {
+      const error = new Error("SwitchChainError: could not switch");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["SwitchChainError"]);
+    });
+  });
+
   describe("Error Message Extraction", () => {
     it("should extract message from standard Error object", async () => {
       const error = new Error("INSUFFICIENT_FUNDS: not enough ETH");

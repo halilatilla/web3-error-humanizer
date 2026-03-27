@@ -1,6 +1,6 @@
 # web3-error-humanizer
 
-> Transform cryptic Web3 errors into human-friendly messages. 598+ local patterns, optional AI fallback.
+> Transform cryptic Web3 errors into human-friendly messages. 617+ local patterns, optional AI fallback.
 
 [![npm version](https://img.shields.io/npm/v/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
 [![npm downloads](https://img.shields.io/npm/dm/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
@@ -49,7 +49,7 @@ const message = humanizeError(error);
 
 ## Features
 
-- **598+ local error patterns** -- Most errors matched instantly without API calls (O(1) exact matches)
+- **617+ local error patterns** -- Most errors matched instantly without API calls (O(1) exact matches)
 - **Zero dependencies** -- The main entry point has no runtime dependencies at all
 - **AI fallback** -- Unknown errors optionally analyzed by GPT-4o-mini (separate import)
 - **viem-compatible** -- Deep error extraction for nested blockchain errors (viem is optional)
@@ -115,7 +115,7 @@ try {
 }
 ```
 
-**Zero cost, instant response, 598+ error patterns covered.**
+**Zero cost, instant response, 617+ error patterns covered.**
 
 ### Option 2: With AI Fallback
 
@@ -228,7 +228,7 @@ import {
   getLocalPatterns,
 } from "web3-error-humanizer";
 
-console.log(getLocalErrorCount()); // 598+
+console.log(getLocalErrorCount()); // 617+
 console.log(hasLocalPattern("INSUFFICIENT_FUNDS")); // true
 console.log(getLocalPatterns()); // ["ACTION_REJECTED", "INSUFFICIENT_FUNDS", ...]
 ```
@@ -293,7 +293,7 @@ interface SwapContext {
 ```mermaid
 flowchart TD
     A["Caught Error"] --> B["Extract Message"]
-    B --> C{"Local Dictionary\n598+ patterns"}
+    B --> C{"Local Dictionary\n617+ patterns"}
     C -->|match found| D["Instant Response\nfree, less than 1ms"]
     C -->|no match| E{"AI configured?"}
     E -->|yes| F["OpenAI API\npaid, ~500ms"]
@@ -501,7 +501,7 @@ const { humanizeError } = require("web3-error-humanizer");
 
 The library is designed to minimize API costs:
 
-1. **Local-first** -- 598+ error patterns never hit the API
+1. **Local-first** -- 617+ error patterns never hit the API
 2. **Performance optimized** -- O(1) exact matches using Map-based lookups
 3. **Concise prompts** -- AI requests use minimal tokens (max 100 tokens)
 4. **gpt-4o-mini default** -- Uses the most cost-effective model

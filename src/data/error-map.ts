@@ -415,6 +415,41 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
     "Transaction not found. Please check the transaction hash.",
   BlockNotFoundError: "Block not found. Please check the block number or hash.",
   LogNotFoundError: "Log not found. Please check your query parameters.",
+  UserRejectedRequestError: "You declined the request in your wallet.",
+  InvalidParamsRpcError:
+    "Invalid parameters were sent to the network. Please try again.",
+  MethodNotFoundRpcError:
+    "This method is not supported by your current provider.",
+  ResourceNotFoundRpcError:
+    "The requested resource was not found on the network.",
+  ChainDisconnectedError:
+    "The chain disconnected. Please check your network connection.",
+  ProviderDisconnectedError:
+    "Your wallet provider disconnected. Please reconnect.",
+  SwitchChainError:
+    "Failed to switch networks. Please switch manually in your wallet.",
+  UnauthorizedProviderError:
+    "Your wallet is not authorized. Please connect your wallet first.",
+  ContractFunctionExecutionError:
+    "The contract call failed. Please check your inputs and try again.",
+  ContractFunctionRevertedError:
+    "The contract rejected this transaction. Check your inputs or try a different amount.",
+  ContractFunctionZeroDataError:
+    "The contract returned no data. The function may not exist at this address.",
+  EstimateGasExecutionError:
+    "Gas estimation failed. The transaction may fail or your inputs may be invalid.",
+  TransactionExecutionError:
+    "Transaction failed to execute. Please check your inputs and try again.",
+  WaitForTransactionReceiptTimeoutError:
+    "Timed out waiting for confirmation. Your transaction may still be pending.",
+  RpcError: "A network request failed. Please try again.",
+  InvalidInputRpcError:
+    "Invalid input sent to the network. Please check your parameters.",
+  TransactionRejectedRpcError:
+    "The network rejected your transaction. Please check your inputs.",
+  LimitExceededRpcError:
+    "Rate limit exceeded. Please wait a moment and try again.",
+  ParseRpcError: "Failed to parse the network response. Please try again.",
 
   // ============================================
   // WalletConnect / Reown Errors
