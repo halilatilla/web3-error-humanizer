@@ -1,3 +1,4 @@
+import { resolveErrorCategory } from "../data/category-meta";
 import { CATEGORIZED_PATTERNS } from "../data/error-map";
 import type { ErrorCategory, LocalErrorEntry } from "../types";
 import { normalize } from "./normalization";
@@ -5,6 +6,7 @@ import { normalize } from "./normalization";
 let exactMatchMap = new Map<string, LocalErrorEntry>();
 let codeMap = new Map<string, LocalErrorEntry>();
 let sortedSubstringEntries: LocalErrorEntry[] = [];
+let normalizedKeyOwners = new Map<string, string[]>();
 
 function buildEntry(
   key: string,
@@ -15,24 +17,44 @@ function buildEntry(
   const hasSeparator = /[\s:._-]/.test(keyLower);
   const isCode = /^-?\d+$/.test(keyLower);
   const isShortToken = keyLower.length < 4 && !hasSeparator && !isCode;
-  return { key, keyLower, message, category, isCode, isShortToken };
+  return {
+    key,
+    keyLower,
+    message,
+    category: resolveErrorCategory(category),
+    isCode,
+    isShortToken,
+  };
 }
 
 function buildIndex(): void {
   const newExact = new Map<string, LocalErrorEntry>();
   const newCode = new Map<string, LocalErrorEntry>();
   const newSubstring: LocalErrorEntry[] = [];
+  const newOwners = new Map<string, string[]>();
 
   for (const [key, { message, category }] of Object.entries(
     CATEGORIZED_PATTERNS
   )) {
     const entry = buildEntry(key, message, category);
-    newExact.set(entry.keyLower, entry);
+    const owners = newOwners.get(entry.keyLower) ?? [];
+    owners.push(entry.key);
+    newOwners.set(entry.keyLower, owners);
+
+    if (!newExact.has(entry.keyLower)) {
+      newExact.set(entry.keyLower, entry);
+    }
 
     if (entry.isCode) {
-      newCode.set(entry.keyLower, entry);
+      if (!newCode.has(entry.keyLower)) {
+        newCode.set(entry.keyLower, entry);
+      }
     } else if (!entry.isShortToken) {
-      newSubstring.push(entry);
+      if (
+        !newSubstring.some((candidate) => candidate.keyLower === entry.keyLower)
+      ) {
+        newSubstring.push(entry);
+      }
     }
   }
 
@@ -41,12 +63,23 @@ function buildIndex(): void {
   exactMatchMap = newExact;
   codeMap = newCode;
   sortedSubstringEntries = newSubstring;
+  normalizedKeyOwners = newOwners;
 }
 
 buildIndex();
 
 export function rebuildIndex(): void {
   buildIndex();
+}
+
+export function getNormalizedKeyConflicts(key: string): string[] {
+  const normalized = normalize(key);
+  const owners = normalizedKeyOwners.get(normalized);
+  if (!owners) {
+    return [];
+  }
+
+  return owners.filter((owner) => owner !== key);
 }
 
 export interface MatchResult {

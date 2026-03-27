@@ -6,6 +6,7 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -34,14 +35,18 @@
     "format:check": "biome format src",
     "prepublishOnly": "npm run test:run && npm run build",
     "release": "semantic-release",
-    "release:dry": "semantic-release --dry-run",
-    "release:patch": "npm version patch && npm publish",
-    "release:minor": "npm version minor && npm publish",
-    "release:major": "npm version major && npm publish"
+    "release:dry": "semantic-release --dry-run"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/halilatilla/web3-error-humanizer.git"
+  },
+  "homepage": "https://github.com/halilatilla/web3-error-humanizer#readme",
+  "bugs": {
+    "url": "https://github.com/halilatilla/web3-error-humanizer/issues"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "keywords": [
     "web3",

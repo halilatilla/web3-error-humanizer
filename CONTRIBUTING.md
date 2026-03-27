@@ -33,12 +33,11 @@ Open `src/data/error-map.ts` and add your entry to the appropriate section:
 
 ### 3. Add a test
 
-Add a test case in `src/index.test.ts` to verify your pattern works:
+Add a focused test case in the relevant test file (`src/api.test.ts`, `src/extraction.test.ts`, `src/patterns.test.ts`, or `src/ai.test.ts`) to verify your pattern works:
 
 ```typescript
-it("should handle YourProtocol error", async () => {
-  const error = new Error("YOUR_ERROR_KEY");
-  const result = await humanizer.humanize(error);
+it("should handle YourProtocol error", () => {
+  const result = humanizeError(new Error("YOUR_ERROR_KEY"));
   expect(result).toBe(LOCAL_ERROR_MAP["YOUR_ERROR_KEY"]);
 });
 ```
@@ -73,12 +72,14 @@ src/
 ├── ai.ts                 # AI fallback entry point (requires openai)
 ├── types.ts              # TypeScript type definitions
 ├── data/
-│   └── error-map.ts      # All 598+ error patterns live here
+│   └── error-map.ts      # All 770+ built-in error patterns live here
 └── utils/
     ├── extraction.ts     # Extract raw message from error objects
     ├── matching.ts       # Pattern matching engine (Map + substring)
     └── normalization.ts  # String normalization for matching
 ```
+
+Custom patterns added with `addPattern()` / `addPatterns()` are process-wide. If you add them in tests, call `resetCustomPatterns()` in your setup/teardown so cases stay isolated.
 
 ## Code Style
 

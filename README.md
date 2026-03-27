@@ -1,6 +1,6 @@
 # web3-error-humanizer
 
-> A developer toolkit for Web3 errors -- structured classification, severity, actionable suggestions, and 770+ local patterns. Optional AI fallback.
+> A local-first developer toolkit for Web3 errors -- structured classification, severity, actionable suggestions, and 770+ local patterns. Optional AI fallback.
 
 [![npm version](https://img.shields.io/npm/v/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
 [![npm downloads](https://img.shields.io/npm/dm/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
@@ -68,6 +68,13 @@ if (result.category === "insufficient_allowance") showApproveButton();
 if (result.recoverable) showRetryButton();
 ```
 
+## Why Developers Like It
+
+- **Useful without AI** -- the default import is local-only, fast, and has zero runtime dependencies
+- **Structured, not just pretty strings** -- categories, severity, suggestions, and recoverability let you build real product UX
+- **Optional AI instead of forced AI** -- unknown errors can use the `/ai` entry point, but the core package never requires an API key
+- **Safe to bundle** -- ESM + CommonJS exports, TypeScript types, and source maps in the published build
+
 ## Features
 
 - **770+ local error patterns** -- Most errors matched instantly without API calls (O(1) exact matches)
@@ -120,7 +127,7 @@ pnpm add web3-error-humanizer
 yarn add web3-error-humanizer
 ```
 
-> **Note:** The main entry point has zero dependencies. If you want AI fallback, install `openai` as well. If your app uses viem, the library will automatically detect and extract viem error details.
+> **Note:** The main entry point has zero dependencies. If you want AI fallback, install `openai` as well. If your app uses viem, the library will automatically detect and extract viem error details. The package supports Node.js `>=18`.
 
 ## Quick Start
 
@@ -160,6 +167,8 @@ try {
 ```
 
 > Requires `openai` as a peer dependency: `npm install openai`
+>
+> Privacy note: the `/ai` entry point only sends sanitized error text and optional context to OpenAI when you configure an API key. The default import never makes network requests.
 
 ## Toolkit API -- Structured Error Output
 
@@ -351,6 +360,8 @@ extractRawMessage(null);                           // "Unknown error"
 
 Add custom error patterns at runtime. Optionally specify a category for structured classification.
 
+Custom patterns are **process-wide**. If you add them in tests, call `resetCustomPatterns()` between cases.
+
 ```typescript
 import { addPattern, addPatterns } from "web3-error-humanizer";
 
@@ -373,6 +384,8 @@ addPatterns({
 });
 ```
 
+Normalized duplicate keys are rejected so new custom patterns cannot silently shadow an existing built-in pattern.
+
 #### `getLocalErrorCount()` / `hasLocalPattern(pattern)` / `getLocalPatterns()`
 
 ```typescript
@@ -385,6 +398,25 @@ import {
 console.log(getLocalErrorCount()); // 770+
 console.log(hasLocalPattern("INSUFFICIENT_FUNDS")); // true
 console.log(getLocalPatterns()); // ["ACTION_REJECTED", "INSUFFICIENT_FUNDS", ...]
+```
+
+#### `resetCustomPatterns()` / `BUILTIN_LOCAL_ERROR_MAP` / `BUILTIN_CATEGORIZED_PATTERNS`
+
+Use these helpers if you want to inspect the shipped dictionary or reset runtime mutations:
+
+```typescript
+import {
+  BUILTIN_LOCAL_ERROR_MAP,
+  BUILTIN_CATEGORIZED_PATTERNS,
+  addPattern,
+  resetCustomPatterns,
+} from "web3-error-humanizer";
+
+console.log(BUILTIN_LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
+console.log(BUILTIN_CATEGORIZED_PATTERNS["INSUFFICIENT_FUNDS"].category);
+
+addPattern("MY_TEMP_ERROR", "Temporary message.");
+resetCustomPatterns(); // removes custom additions and restores built-ins
 ```
 
 ### Class-based API (Optional AI Fallback)
@@ -767,9 +799,10 @@ For high-volume applications, consider:
 ## Performance
 
 - **Exact matches**: O(1) using Map lookups
-- **Substring matches**: O(n) but optimized with pre-sorted entries (longest first)
+- **Substring matches**: O(n) in the number of substring patterns, optimized by specificity (longest first)
 - **Error extraction**: Handles nested errors, error chains, and multiple formats
 - **Normalization**: Unicode-aware with diacritic removal for better matching
+- **Custom pattern rebuilds**: `addPattern()` / `addPatterns()` rebuild indexes once after mutation
 
 ## Error Coverage
 
@@ -787,6 +820,13 @@ The library covers errors from:
 - **Bitcoin**: UTXO errors, PSBT signing, transaction validation
 - **Validation**: Input validation errors, parameter requirements, address validation
 - **Additional RPC**: Extended RPC error codes (-32009 to -32015, -32612, -32613)
+
+## Limitations
+
+- Local matching is only as good as the current dictionary. Unknown protocol-specific errors still need new patterns or the optional AI path.
+- Substring matching is intentionally conservative, but it can still be less precise than exact matches for very noisy provider messages.
+- `addPattern()` and `addPatterns()` mutate a shared in-memory registry for the current process.
+- If you use `web3-error-humanizer/ai`, do not pass secrets in error context that you would not want sent to your model provider.
 
 ## Contributing
 

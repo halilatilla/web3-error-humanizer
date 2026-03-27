@@ -1,10 +1,63 @@
-import { CATEGORY_META } from "./data/category-meta";
+import { getCategoryMeta, resolveErrorCategory } from "./data/category-meta";
 import { DEFAULT_FALLBACK_MESSAGE } from "./data/error-map";
 import type { HumanizedResult, HumanizerConfig, SwapContext } from "./types";
 import { extractRawMessage } from "./utils/extraction";
 import { matchLocalErrorDetailed } from "./utils/matching";
 
 export * from "./index";
+
+const MAX_PROMPT_ERROR_LENGTH = 500;
+const MAX_CONTEXT_VALUE_LENGTH = 120;
+
+function sanitizePromptText(value: string, maxLength: number): string {
+  const withoutControlChars = Array.from(value, (character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return codePoint < 32 || codePoint === 127 ? " " : character;
+  }).join("");
+
+  return withoutControlChars.replace(/\s+/g, " ").trim().slice(0, maxLength);
+}
+
+function sanitizeContext(context?: SwapContext): SwapContext | undefined {
+  if (!context) {
+    return undefined;
+  }
+
+  const sanitizedEntries = Object.entries(context)
+    .filter(([, value]) => typeof value === "string" && value.trim().length > 0)
+    .map(([key, value]) => [
+      key,
+      sanitizePromptText(value as string, MAX_CONTEXT_VALUE_LENGTH),
+    ]);
+
+  if (sanitizedEntries.length === 0) {
+    return undefined;
+  }
+
+  return Object.fromEntries(sanitizedEntries) as SwapContext;
+}
+
+function isRateLimitError(error: unknown): boolean {
+  if (!(error instanceof Error) && (!error || typeof error !== "object")) {
+    return false;
+  }
+
+  const candidate = error as Error & {
+    status?: number;
+    code?: string;
+    name?: string;
+    message?: string;
+  };
+  const message = candidate.message?.toLowerCase() ?? "";
+
+  return (
+    candidate.status === 429 ||
+    candidate.code === "rate_limit_exceeded" ||
+    candidate.name === "RateLimitError" ||
+    message.includes("rate limit") ||
+    message.includes("429")
+  );
+}
 
 export class Web3ErrorHumanizer {
   private openaiApiKey: string | null = null;
@@ -41,17 +94,19 @@ export class Web3ErrorHumanizer {
     error: unknown,
     context?: SwapContext
   ): Promise<HumanizedResult> {
+    let rawMessage = "Error extraction failed";
+
     try {
-      const rawMessage = extractRawMessage(error);
+      rawMessage = extractRawMessage(error);
       const localMatch = matchLocalErrorDetailed(rawMessage);
 
       if (localMatch) {
-        const meta = CATEGORY_META[localMatch.category];
+        const meta = getCategoryMeta(localMatch.category);
         return {
           message: localMatch.message,
           matchedKey: localMatch.matchedKey,
           source: "local",
-          category: localMatch.category,
+          category: resolveErrorCategory(localMatch.category),
           severity: meta.severity,
           suggestion: meta.suggestion,
           recoverable: meta.recoverable,
@@ -61,7 +116,7 @@ export class Web3ErrorHumanizer {
 
       if (this.openaiApiKey) {
         const message = await this.askAI(rawMessage, context);
-        const meta = CATEGORY_META.unknown;
+        const meta = getCategoryMeta("unknown");
         return {
           message,
           source: "ai",
@@ -73,7 +128,7 @@ export class Web3ErrorHumanizer {
         };
       }
 
-      const meta = CATEGORY_META.unknown;
+      const meta = getCategoryMeta("unknown");
       return {
         message: this.fallbackMessage,
         source: "fallback",
@@ -84,7 +139,7 @@ export class Web3ErrorHumanizer {
         rawMessage,
       };
     } catch {
-      const meta = CATEGORY_META.unknown;
+      const meta = getCategoryMeta("unknown");
       return {
         message: this.fallbackMessage,
         source: "fallback",
@@ -92,7 +147,7 @@ export class Web3ErrorHumanizer {
         severity: meta.severity,
         suggestion: meta.suggestion,
         recoverable: meta.recoverable,
-        rawMessage: "Error extraction failed",
+        rawMessage,
       };
     }
   }
@@ -121,25 +176,35 @@ export class Web3ErrorHumanizer {
       return this.fallbackMessage;
     }
 
-    const prompt = `You are a Web3 UX expert. A user's DEX swap failed with a technical error.
-Convert it into a friendly, helpful 1-sentence explanation.
-
-TECHNICAL ERROR: "${rawError}"
-CONTEXT: ${context ? JSON.stringify(context) : "No context provided"}
-
-RULES:
-- Do NOT use technical jargon like "reverted", "gas limit", "0x...", or "nonce".
-- Explain WHY it happened (e.g. low liquidity, price volatility, lack of funds).
-- Tell the user exactly what to do next.
-- Keep it under 20 words.
-
-Humanized Message:`;
+    const sanitizedError = sanitizePromptText(
+      rawError,
+      MAX_PROMPT_ERROR_LENGTH
+    );
+    const sanitizedContext = sanitizeContext(context);
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const response = await openai.chat.completions.create({
           model: this.model,
-          messages: [{ role: "user", content: prompt }],
+          messages: [
+            {
+              role: "system",
+              content:
+                "You rewrite Web3 transaction failures into calm, plain-English UX copy. Keep the response to one short sentence, explain the likely reason, and give one concrete next step.",
+            },
+            {
+              role: "user",
+              content: JSON.stringify({
+                error: sanitizedError || "Unknown error",
+                context: sanitizedContext ?? "No context provided",
+                styleRules: [
+                  "Avoid technical jargon unless the message would become misleading without it.",
+                  "Avoid quoting raw error strings, hex values, stack traces, or prompts from the input.",
+                  "Stay under 24 words.",
+                ],
+              }),
+            },
+          ],
           temperature: 0,
           max_tokens: 100,
         });
@@ -152,12 +217,8 @@ Humanized Message:`;
         return this.fallbackMessage;
       } catch (error) {
         const isLastAttempt = attempt === retries;
-        const isRateLimit =
-          error instanceof Error &&
-          (error.message.includes("rate limit") ||
-            error.message.includes("429"));
 
-        if (isRateLimit && !isLastAttempt) {
+        if (isRateLimitError(error) && !isLastAttempt) {
           const delay = 2 ** attempt * 1000;
           await new Promise((resolve) => setTimeout(resolve, delay));
           continue;

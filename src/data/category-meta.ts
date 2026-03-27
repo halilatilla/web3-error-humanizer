@@ -86,3 +86,15 @@ export const CATEGORY_META: Record<ErrorCategory, CategoryMeta> = {
     suggestion: "Please try again. If the issue persists, contact support.",
   },
 };
+
+export function isErrorCategory(value: unknown): value is ErrorCategory {
+  return typeof value === "string" && value in CATEGORY_META;
+}
+
+export function resolveErrorCategory(value: unknown): ErrorCategory {
+  return isErrorCategory(value) ? value : "unknown";
+}
+
+export function getCategoryMeta(value: unknown): CategoryMeta {
+  return CATEGORY_META[resolveErrorCategory(value)];
+}

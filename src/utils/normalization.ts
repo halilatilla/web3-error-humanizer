@@ -18,6 +18,6 @@ export function normalize(value: string): string {
       // biome-ignore lint/suspicious/noMisleadingCharacterClass: We want to remove combining diacritical marks
       .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
       .replace(/\s+/g, " ") // Normalize whitespace
-      .replace(/[^\w\s:._-]/g, "")
+      .replace(/[^\p{L}\p{N}\s:._-]/gu, "")
   ); // Remove special characters except common separators
 }

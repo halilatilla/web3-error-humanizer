@@ -1,17 +1,29 @@
-import { CATEGORY_META } from "./data/category-meta";
+import { getCategoryMeta, resolveErrorCategory } from "./data/category-meta";
 import {
+  BUILTIN_CATEGORIZED_PATTERNS,
+  BUILTIN_LOCAL_ERROR_MAP,
   CATEGORIZED_PATTERNS,
   DEFAULT_FALLBACK_MESSAGE,
   LOCAL_ERROR_MAP,
+  resetCustomPatterns,
+  syncLocalErrorMap,
 } from "./data/error-map";
 import type { ErrorCategory, ErrorSeverity, HumanizedResult } from "./types";
 import { extractRawMessage } from "./utils/extraction";
-import { matchLocalErrorDetailed, rebuildIndex } from "./utils/matching";
+import {
+  getNormalizedKeyConflicts,
+  matchLocalErrorDetailed,
+  rebuildIndex,
+} from "./utils/matching";
+import { normalize } from "./utils/normalization";
 
 export {
+  BUILTIN_CATEGORIZED_PATTERNS,
+  BUILTIN_LOCAL_ERROR_MAP,
   DEFAULT_FALLBACK_MESSAGE,
   LOCAL_ERROR_MAP,
   CATEGORIZED_PATTERNS,
+  resetCustomPatterns,
 } from "./data/error-map";
 export { CATEGORY_META } from "./data/category-meta";
 export { extractRawMessage } from "./utils/extraction";
@@ -27,11 +39,11 @@ function buildResult(
   fallback: string
 ): HumanizedResult {
   if (match) {
-    const meta = CATEGORY_META[match.category];
+    const meta = getCategoryMeta(match.category);
     return {
       message: match.message,
       source: "local",
-      category: match.category,
+      category: resolveErrorCategory(match.category),
       severity: meta.severity,
       suggestion: meta.suggestion,
       recoverable: meta.recoverable,
@@ -39,7 +51,7 @@ function buildResult(
       rawMessage,
     };
   }
-  const meta = CATEGORY_META.unknown;
+  const meta = getCategoryMeta("unknown");
   return {
     message: fallback,
     source: "fallback",
@@ -93,7 +105,7 @@ export function humanizeErrorDetailed(
     const match = matchLocalErrorDetailed(rawMessage);
     return buildResult(match, rawMessage, fallback);
   } catch {
-    const meta = CATEGORY_META.unknown;
+    const meta = getCategoryMeta("unknown");
     return {
       message: fallback,
       source: "fallback",
@@ -125,7 +137,7 @@ export function classifyError(error: unknown): ErrorCategory {
  */
 export function isRecoverable(error: unknown): boolean {
   const category = classifyError(error);
-  return CATEGORY_META[category].recoverable;
+  return getCategoryMeta(category).recoverable;
 }
 
 /**
@@ -133,7 +145,7 @@ export function isRecoverable(error: unknown): boolean {
  */
 export function getSuggestion(error: unknown): string {
   const category = classifyError(error);
-  return CATEGORY_META[category].suggestion;
+  return getCategoryMeta(category).suggestion;
 }
 
 /**
@@ -141,7 +153,7 @@ export function getSuggestion(error: unknown): string {
  */
 export function getErrorSeverity(error: unknown): ErrorSeverity {
   const category = classifyError(error);
-  return CATEGORY_META[category].severity;
+  return getCategoryMeta(category).severity;
 }
 
 /**
@@ -174,8 +186,20 @@ export function addPattern(
   message: string,
   category: ErrorCategory = "unknown"
 ): void {
-  CATEGORIZED_PATTERNS[key] = { message, category };
-  (LOCAL_ERROR_MAP as Record<string, string>)[key] = message;
+  const normalizedConflicts = getNormalizedKeyConflicts(key);
+  const isExistingPattern = key in CATEGORIZED_PATTERNS;
+
+  if (!isExistingPattern && normalizedConflicts.length > 0) {
+    throw new Error(
+      `Pattern "${key}" normalizes to an existing key: ${normalizedConflicts.join(", ")}`
+    );
+  }
+
+  CATEGORIZED_PATTERNS[key] = {
+    message,
+    category: resolveErrorCategory(category),
+  };
+  syncLocalErrorMap();
   rebuildIndex();
 }
 
@@ -189,17 +213,42 @@ export function addPatterns(
     string | { message: string; category?: ErrorCategory }
   >
 ): void {
-  for (const [key, value] of Object.entries(patterns)) {
-    if (typeof value === "string") {
-      CATEGORIZED_PATTERNS[key] = { message: value, category: "unknown" };
-      (LOCAL_ERROR_MAP as Record<string, string>)[key] = value;
-    } else {
-      CATEGORIZED_PATTERNS[key] = {
-        message: value.message,
-        category: value.category ?? "unknown",
-      };
-      (LOCAL_ERROR_MAP as Record<string, string>)[key] = value.message;
+  const batchNormalizedKeys = new Map<string, string>();
+  const nextEntries = Object.entries(patterns).map(([key, value]) => {
+    const normalizedConflicts = getNormalizedKeyConflicts(key);
+    const isExistingPattern = key in CATEGORIZED_PATTERNS;
+    const normalizedKey = normalize(key);
+    const existingBatchKey = batchNormalizedKeys.get(normalizedKey);
+
+    if (!isExistingPattern && normalizedConflicts.length > 0) {
+      throw new Error(
+        `Pattern "${key}" normalizes to an existing key: ${normalizedConflicts.join(", ")}`
+      );
     }
+
+    if (existingBatchKey && existingBatchKey !== key) {
+      throw new Error(
+        `Pattern "${key}" conflicts with another key in the same batch: ${existingBatchKey}`
+      );
+    }
+
+    batchNormalizedKeys.set(normalizedKey, key);
+
+    return [
+      key,
+      typeof value === "string"
+        ? { message: value, category: "unknown" as ErrorCategory }
+        : {
+            message: value.message,
+            category: resolveErrorCategory(value.category),
+          },
+    ] as const;
+  });
+
+  for (const [key, value] of nextEntries) {
+    CATEGORIZED_PATTERNS[key] = value;
   }
+
+  syncLocalErrorMap();
   rebuildIndex();
 }
