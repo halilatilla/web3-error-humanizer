@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.0.0...v2.1.0) (2026-03-27)
+
+
+### Features
+
+* add 19 viem error class name patterns ([813befe](https://github.com/halilatilla/web3-error-humanizer/commit/813befe44273f019b84cb11909d3deea7c87c574))
+
 # [2.0.0](https://github.com/halilatilla/web3-error-humanizer/compare/v1.1.1...v2.0.0) (2026-03-27)
 
 
