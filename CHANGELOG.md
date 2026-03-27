@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.2.0...v2.3.0) (2026-03-27)
+
+
+### Features
+
+* transform into developer toolkit with structured error classification ([451b9b2](https://github.com/halilatilla/web3-error-humanizer/commit/451b9b20f1f1ec5c8e9c86de03590d439f009690))
+
 # [2.2.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.1.0...v2.2.0) (2026-03-27)
 
 
