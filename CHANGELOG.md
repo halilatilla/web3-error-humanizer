@@ -1,3 +1,27 @@
+# [2.0.0](https://github.com/halilatilla/web3-error-humanizer/compare/v1.1.1...v2.0.0) (2026-03-27)
+
+
+* feat!: zero-dependency core, split AI into separate entry point ([620bc66](https://github.com/halilatilla/web3-error-humanizer/commit/620bc66242a69b9577412041a496d7f4bd9e61bc))
+
+
+### BREAKING CHANGES
+
+* Web3ErrorHumanizer class moved from 'web3-error-humanizer' to 'web3-error-humanizer/ai'. openai and viem are now optional peer dependencies instead of hard dependencies.
+
+- Remove openai and viem from dependencies, move to optional peerDependencies
+- Split into two entry points: local-only (zero deps) and /ai (OpenAI fallback)
+- Use duck-typing for viem error detection instead of direct import
+- Use dynamic import() for OpenAI SDK, loaded only when needed
+- Add addPattern()/addPatterns() API for runtime extensibility
+- Remove dangerouslyAllowBrowser: true from OpenAI constructor
+- Remove process.env.NODE_ENV checks that crash in browsers
+- Fix unused OpenAI import in types.ts
+- Add LICENSE file, CONTRIBUTING.md, GitHub issue templates
+- Add 18 npm keywords for discoverability
+- Rewrite README with before/after section, mermaid diagram, bundlephobia badge
+
+Made-with: Cursor
+
 ## [1.1.1](https://github.com/halilatilla/web3-error-humanizer/compare/v1.1.0...v1.1.1) (2025-12-26)
 
 
