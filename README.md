@@ -1,6 +1,6 @@
 # web3-error-humanizer
 
-> Transform cryptic Web3 errors into human-friendly messages. 617+ local patterns, optional AI fallback.
+> Transform cryptic Web3 errors into human-friendly messages. 770+ local patterns, optional AI fallback.
 
 [![npm version](https://img.shields.io/npm/v/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
 [![npm downloads](https://img.shields.io/npm/dm/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
@@ -49,7 +49,7 @@ const message = humanizeError(error);
 
 ## Features
 
-- **617+ local error patterns** -- Most errors matched instantly without API calls (O(1) exact matches)
+- **770+ local error patterns** -- Most errors matched instantly without API calls (O(1) exact matches)
 - **Zero dependencies** -- The main entry point has no runtime dependencies at all
 - **AI fallback** -- Unknown errors optionally analyzed by GPT-4o-mini (separate import)
 - **viem-compatible** -- Deep error extraction for nested blockchain errors (viem is optional)
@@ -115,7 +115,7 @@ try {
 }
 ```
 
-**Zero cost, instant response, 617+ error patterns covered.**
+**Zero cost, instant response, 770+ error patterns covered.**
 
 ### Option 2: With AI Fallback
 
@@ -228,7 +228,7 @@ import {
   getLocalPatterns,
 } from "web3-error-humanizer";
 
-console.log(getLocalErrorCount()); // 617+
+console.log(getLocalErrorCount()); // 770+
 console.log(hasLocalPattern("INSUFFICIENT_FUNDS")); // true
 console.log(getLocalPatterns()); // ["ACTION_REJECTED", "INSUFFICIENT_FUNDS", ...]
 ```
@@ -293,7 +293,7 @@ interface SwapContext {
 ```mermaid
 flowchart TD
     A["Caught Error"] --> B["Extract Message"]
-    B --> C{"Local Dictionary\n617+ patterns"}
+    B --> C{"Local Dictionary\n770+ patterns"}
     C -->|match found| D["Instant Response\nfree, less than 1ms"]
     C -->|no match| E{"AI configured?"}
     E -->|yes| F["OpenAI API\npaid, ~500ms"]
@@ -383,6 +383,76 @@ flowchart TD
 | `UniswapV4: SPL` | Price limit reached. The trade would move the price too far.               |
 | `HookReverted`   | A custom logic 'hook' attached to this pool failed. Try a different route. |
 | `FeeTooHigh`     | The dynamic fee set by the pool's hook is too high for this trade.         |
+
+### Uniswap V4 Custom Errors (NEW)
+
+| Error Pattern           | Human Message                                                           |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `CurrencyNotSettled`    | Token balances were not settled after the swap.                         |
+| `PoolNotInitialized`    | This pool has not been initialized yet.                                 |
+| `SwapAmountCannotBeZero`| The swap amount cannot be zero.                                         |
+| `HookAddressNotValid`   | The hook address does not match the required permission flags.          |
+| `FailedHookCall`        | The call to the pool hook failed.                                       |
+| `InvalidTick`           | The specified tick value is invalid.                                    |
+
+### Compound V3 (Comet) Errors (NEW)
+
+| Error Pattern        | Human Message                                                        |
+| -------------------- | -------------------------------------------------------------------- |
+| `BorrowTooSmall`     | Borrow amount is too small. The minimum borrow amount was not met.   |
+| `NotCollateralized`  | Your position is not sufficiently collateralized.                    |
+| `SupplyCapExceeded`  | Supply cap exceeded for this asset.                                  |
+| `TooMuchSlippage`    | Too much slippage. The price moved beyond the acceptable range.      |
+| `TransferInFailed`   | Token transfer into the protocol failed.                             |
+
+### Aave V3 Numeric Error Codes (NEW)
+
+| Code | Human Message                                                          |
+| ---- | ---------------------------------------------------------------------- |
+| `27` | This reserve is currently inactive.                                    |
+| `28` | This reserve is frozen. You cannot perform this action right now.      |
+| `35` | Your health factor is too low. Add collateral or repay some debt.      |
+| `50` | Borrow cap exceeded for this reserve. Try a smaller amount.            |
+| `51` | Supply cap exceeded for this reserve. Try a smaller deposit.           |
+| `91` | Flash loans are disabled for this asset.                               |
+
+### WalletConnect v2 Error Codes (NEW)
+
+| Code   | Human Message                                                    |
+| ------ | ---------------------------------------------------------------- |
+| `3001` | Unauthorized method. Your wallet doesn't support this action.    |
+| `5100` | The requested chain is not supported by this wallet.             |
+| `7001` | No active session found. Please reconnect your wallet.           |
+| `8000` | WalletConnect session request expired. Please try again.         |
+
+### Solana Program Errors (NEW)
+
+| Error Pattern                                    | Human Message                                         |
+| ------------------------------------------------ | ----------------------------------------------------- |
+| `SendTransactionError`                           | Failed to send the Solana transaction.                |
+| `TransactionExpiredBlockheightExceededError`      | Transaction expired because block height exceeded.    |
+| `MissingRequiredSignature`                        | A required signature is missing from the transaction. |
+| `AccountNotRentExempt`                            | Account does not have enough SOL to be rent-exempt.   |
+
+### Solidity Panic Codes & Selectors (NEW)
+
+| Error Pattern    | Human Message                                              |
+| ---------------- | ---------------------------------------------------------- |
+| `Panic(0x11)`    | Arithmetic overflow or underflow.                          |
+| `Panic(0x12)`    | Division or modulo by zero.                                |
+| `Panic(0x32)`    | Array index is out of bounds.                              |
+| `0xe450d38c`     | Insufficient token balance (ERC-20).                       |
+| `0xfb8f41b2`     | Insufficient token allowance (ERC-20).                     |
+| `0x5212cba1`     | Token balances not settled (Uniswap V4 CurrencyNotSettled).|
+
+### OpenZeppelin / Common Contract Errors (NEW)
+
+| Error Pattern                      | Human Message                                         |
+| ---------------------------------- | ----------------------------------------------------- |
+| `OwnableUnauthorizedAccount`       | You are not the owner of this contract.               |
+| `EnforcedPause`                    | This contract is currently paused.                    |
+| `ReentrancyGuardReentrantCall`     | Re-entrant call detected and blocked.                 |
+| `AccessControlUnauthorizedAccount` | You do not have the required role.                    |
 
 ### Bridge & Cross-Chain
 
@@ -501,7 +571,7 @@ const { humanizeError } = require("web3-error-humanizer");
 
 The library is designed to minimize API costs:
 
-1. **Local-first** -- 617+ error patterns never hit the API
+1. **Local-first** -- 770+ error patterns never hit the API
 2. **Performance optimized** -- O(1) exact matches using Map-based lookups
 3. **Concise prompts** -- AI requests use minimal tokens (max 100 tokens)
 4. **gpt-4o-mini default** -- Uses the most cost-effective model

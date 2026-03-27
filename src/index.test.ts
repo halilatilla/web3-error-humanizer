@@ -409,6 +409,178 @@ describe("Web3ErrorHumanizer", () => {
     });
   });
 
+  describe("Uniswap V4 Errors", () => {
+    it("should handle CurrencyNotSettled", async () => {
+      const error = new Error("CurrencyNotSettled");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["CurrencyNotSettled"]);
+    });
+
+    it("should handle PoolNotInitialized", async () => {
+      const error = new Error("PoolNotInitialized");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["PoolNotInitialized"]);
+    });
+
+    it("should handle SwapAmountCannotBeZero", async () => {
+      const error = new Error("SwapAmountCannotBeZero");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["SwapAmountCannotBeZero"]);
+    });
+
+    it("should handle InvalidHookResponse", async () => {
+      const error = new Error("InvalidHookResponse from hook");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["InvalidHookResponse"]);
+    });
+  });
+
+  describe("Compound V3 (Comet) Errors", () => {
+    it("should handle BorrowTooSmall", async () => {
+      const error = new Error("BorrowTooSmall");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["BorrowTooSmall"]);
+    });
+
+    it("should handle NotCollateralized", async () => {
+      const error = new Error("NotCollateralized");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["NotCollateralized"]);
+    });
+
+    it("should handle SupplyCapExceeded", async () => {
+      const error = new Error("SupplyCapExceeded");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["SupplyCapExceeded"]);
+    });
+
+    it("should handle TransferInFailed", async () => {
+      const error = new Error("TransferInFailed");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["TransferInFailed"]);
+    });
+  });
+
+  describe("Aave V3 Numeric Error Codes", () => {
+    it("should handle error code 35 (health factor too low)", async () => {
+      const error = new Error("35");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["35"]);
+    });
+
+    it("should handle error code 50 (borrow cap exceeded)", async () => {
+      const error = new Error("50");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["50"]);
+    });
+  });
+
+  describe("WalletConnect v2 Error Codes", () => {
+    it("should handle error code 7001 (no active session)", async () => {
+      const error = { code: 7001, message: "No matching key" };
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["7001"]);
+    });
+
+    it("should handle error code 8000 (session expired)", async () => {
+      const error = { code: 8000, message: "Session request expired" };
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["8000"]);
+    });
+  });
+
+  describe("Solana Program Errors", () => {
+    it("should handle SendTransactionError", async () => {
+      const error = new Error("SendTransactionError: failed");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["SendTransactionError"]);
+    });
+
+    it("should handle MissingRequiredSignature", async () => {
+      const error = new Error("MissingRequiredSignature");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["MissingRequiredSignature"]);
+    });
+
+    it("should handle TransactionExpiredBlockheightExceededError", async () => {
+      const error = new Error(
+        "TransactionExpiredBlockheightExceededError: block height exceeded"
+      );
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(
+        LOCAL_ERROR_MAP["TransactionExpiredBlockheightExceededError"]
+      );
+    });
+  });
+
+  describe("Solidity Panic Codes", () => {
+    it("should handle Panic(0x11) arithmetic overflow", async () => {
+      const error = new Error("Panic(0x11)");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Panic(0x11)"]);
+    });
+
+    it("should handle Panic(0x12) division by zero", async () => {
+      const error = new Error("Panic(0x12)");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["Panic(0x12)"]);
+    });
+  });
+
+  describe("OpenZeppelin / Common Contract Errors", () => {
+    it("should handle OwnableUnauthorizedAccount", async () => {
+      const error = new Error("OwnableUnauthorizedAccount");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["OwnableUnauthorizedAccount"]);
+    });
+
+    it("should handle EnforcedPause", async () => {
+      const error = new Error("EnforcedPause");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["EnforcedPause"]);
+    });
+
+    it("should handle execution reverted with ERC20 reason", async () => {
+      const error = new Error(
+        "execution reverted: ERC20: transfer amount exceeds balance"
+      );
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(
+        LOCAL_ERROR_MAP[
+          "execution reverted: ERC20: transfer amount exceeds balance"
+        ]
+      );
+    });
+  });
+
+  describe("ERC-6093 Extended Errors", () => {
+    it("should handle ERC721NonexistentToken", async () => {
+      const error = new Error("ERC721NonexistentToken");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["ERC721NonexistentToken"]);
+    });
+
+    it("should handle ERC1155MissingApprovalForAll", async () => {
+      const error = new Error("ERC1155MissingApprovalForAll");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["ERC1155MissingApprovalForAll"]);
+    });
+  });
+
+  describe("Hex Error Selectors", () => {
+    it("should handle 0xe450d38c (ERC20 insufficient balance)", async () => {
+      const error = new Error("0xe450d38c");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["0xe450d38c"]);
+    });
+
+    it("should handle 0x5212cba1 (CurrencyNotSettled)", async () => {
+      const error = new Error("0x5212cba1");
+      const result = await humanizer.humanize(error);
+      expect(result).toBe(LOCAL_ERROR_MAP["0x5212cba1"]);
+    });
+  });
+
   describe("Error Message Extraction", () => {
     it("should extract message from standard Error object", async () => {
       const error = new Error("INSUFFICIENT_FUNDS: not enough ETH");
@@ -621,6 +793,18 @@ describe("LOCAL_ERROR_MAP", () => {
       "-32603",
       "NETWORK_ERROR",
       "Session expired",
+      "CurrencyNotSettled",
+      "BorrowTooSmall",
+      "NotCollateralized",
+      "OwnableUnauthorizedAccount",
+      "EnforcedPause",
+      "Panic(0x11)",
+      "0xe450d38c",
+      "ERC721NonexistentToken",
+      "SendTransactionError",
+      "MissingRequiredSignature",
+      "7001",
+      "8000",
     ];
 
     expectedKeys.forEach((key) => {

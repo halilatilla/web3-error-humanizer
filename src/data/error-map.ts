@@ -3,19 +3,23 @@ export const DEFAULT_FALLBACK_MESSAGE = "Transaction failed. Please try again.";
 /**
  * Comprehensive error map covering:
  * - Ethers.js error codes
- * - MetaMask/EIP-1193 error codes
- * - Phantom/Solana wallet errors
+ * - MetaMask/EIP-1193/EIP-1474 error codes
+ * - Viem error classes
+ * - Phantom/Solana wallet & program errors
  * - TON/TonConnect errors
  * - Tron/TronLink errors
  * - Sui wallet errors
  * - Aptos wallet errors
- * - Uniswap V2/V3 errors
- * - PancakeSwap errors
- * - SushiSwap errors
- * - Generic ERC20 errors
- * - Gas-related errors
- * - WalletConnect/Reown errors
- * - Network errors
+ * - Uniswap V2/V3/V4 errors (incl. hooks & custom selectors)
+ * - PancakeSwap / SushiSwap / Curve / Balancer / 1inch / KyberSwap errors
+ * - Aave V3 numeric error codes
+ * - Compound V3 (Comet) errors
+ * - ERC-6093 standard custom errors (ERC-20/721/1155)
+ * - ERC-4337 Account Abstraction errors
+ * - WalletConnect v2 error codes
+ * - Solidity panic codes & common selectors (hex)
+ * - OpenZeppelin common errors (Ownable, AccessControl, Pausable)
+ * - Gas, nonce, network, L2/rollup errors
  */
 export const LOCAL_ERROR_MAP: Record<string, string> = {
   // ============================================
@@ -71,6 +75,32 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
     "Internal math overflow. Try again with updated parameters or smaller size.",
 
   // ============================================
+  // Aave V3 Numeric Error Codes (Errors.sol)
+  // ============================================
+  "26": "Amount must be greater than 0.",
+  "27": "This reserve is currently inactive. Please try a different asset.",
+  "28": "This reserve is frozen. You cannot perform this action right now.",
+  "29": "This reserve is paused. Please try again later.",
+  "30": "Borrowing is not enabled for this asset.",
+  "31": "Stable borrowing is not enabled for this asset.",
+  "32": "You cannot withdraw more than your available balance.",
+  "34": "Your collateral balance is zero. Supply collateral first.",
+  "35": "Your health factor is too low. Add collateral or repay some debt.",
+  "36": "Not enough collateral to cover this borrow. Add more or reduce the amount.",
+  "39": "You don't have debt of this type to repay.",
+  "45": "This position cannot be liquidated — health factor is above threshold.",
+  "46": "The selected collateral cannot be liquidated.",
+  "50": "Borrow cap exceeded for this reserve. Try a smaller amount.",
+  "51": "Supply cap exceeded for this reserve. Try a smaller deposit.",
+  "53": "Debt ceiling exceeded for this asset.",
+  "57": "Loan-to-value validation failed. Adjust your collateral or borrow amount.",
+  "59": "Price oracle check failed. The market may be volatile — try again later.",
+  "60": "This asset cannot be borrowed in isolation mode.",
+  "80": "This operation is not supported by the protocol.",
+  "89": "You cannot borrow multiple assets when using a siloed asset.",
+  "91": "Flash loans are disabled for this asset.",
+
+  // ============================================
   // ERC-6093 Standard Custom Errors
   // ============================================
   ERC20InsufficientBalance:
@@ -82,6 +112,7 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   ERC20InvalidApprover: "Invalid address used for token approval.",
   ERC20InvalidSpender: "Invalid spender address for token approval.",
   ERC721InvalidOwner: "You do not own this NFT.",
+  ERC721NonexistentToken: "This NFT does not exist.",
   ERC721InvalidSender: "You are not authorized to send this NFT.",
   ERC721InvalidReceiver: "Invalid recipient address for this NFT.",
   ERC721InsufficientApproval: "You need to approve this NFT transfer first.",
@@ -89,6 +120,10 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   ERC1155InsufficientBalance: "You do not have enough of these tokens/NFTs.",
   ERC1155InvalidSender: "You are not authorized to send these tokens.",
   ERC1155InvalidReceiver: "Invalid recipient address for these tokens.",
+  ERC1155MissingApprovalForAll:
+    "You need to set approval for all before this transfer.",
+  ERC1155InvalidArrayLength:
+    "Token IDs and amounts arrays must have the same length.",
   ERC1155InsufficientApproval: "You need to approve this transfer first.",
 
   // ============================================
@@ -212,6 +247,45 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
     "A custom logic 'hook' attached to this pool failed. Try a different route.",
   FeeTooHigh:
     "The dynamic fee set by the pool's hook is too high for this trade.",
+  CurrencyNotSettled:
+    "Token balances were not settled after the swap. The transaction was rolled back.",
+  PoolNotInitialized:
+    "This pool has not been initialized yet. It needs to be created first.",
+  AlreadyUnlocked: "The pool manager is already unlocked.",
+  ManagerLocked: "The pool manager is locked. You need to call unlock first.",
+  TickSpacingTooLarge: "The tick spacing is too large for this pool.",
+  TickSpacingTooSmall: "The tick spacing is too small for this pool.",
+  CurrenciesOutOfOrderOrEqual:
+    "Token addresses are out of order or identical. Token0 must be less than Token1.",
+  SwapAmountCannotBeZero: "The swap amount cannot be zero.",
+  HookAddressNotValid:
+    "The hook address does not match the required permission flags.",
+  InvalidHookResponse: "The pool hook returned an invalid response.",
+  FailedHookCall: "The call to the pool hook failed.",
+  HookDeltaExceedsSwapAmount:
+    "The hook is trying to take more tokens than the swap amount allows.",
+  PoolAlreadyInitialized: "This pool has already been initialized.",
+  PriceLimitAlreadyExceeded:
+    "The current price already exceeds your specified limit.",
+  PriceLimitOutOfBounds: "The price limit is out of the valid range.",
+  NoLiquidityToReceiveFees:
+    "There is no liquidity in this pool to receive fees.",
+  InvalidFeeForExactOut:
+    "This fee configuration does not support exact-output swaps.",
+  TicksMisordered: "The lower tick must be less than the upper tick.",
+  TickLowerOutOfBounds: "The lower tick is below the minimum allowed.",
+  TickUpperOutOfBounds: "The upper tick is above the maximum allowed.",
+  TickLiquidityOverflow: "Adding this liquidity would overflow the tick.",
+  InvalidTick: "The specified tick value is invalid.",
+  InvalidSqrtPrice: "The specified sqrt price is out of range.",
+  InvalidPriceOrLiquidity: "Invalid price or liquidity parameters.",
+  NotEnoughLiquidity: "Not enough liquidity in the pool to complete this swap.",
+  PriceOverflow: "The calculated price overflowed. Try a smaller amount.",
+  TickMisaligned: "The tick is not aligned with the pool's tick spacing.",
+  FeeTooLarge: "The fee exceeds the maximum allowed value.",
+  CannotUpdateEmptyPosition:
+    "Cannot update an empty liquidity position. Add liquidity first.",
+  InvalidCaller: "You are not authorized to call this function.",
 
   // ============================================
   // PancakeSwap Errors
@@ -289,6 +363,39 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
     "Input amount too small. Try a larger amount.",
   "KyberSwap: insufficient liquidity": "Not enough liquidity for this trade.",
   "KyberSwap: expired": "Quote expired. Please try again.",
+
+  // ============================================
+  // Compound V3 (Comet) Errors
+  // ============================================
+  Absurd:
+    "The operation produced an unreasonable result. Please check your inputs.",
+  BadAsset: "Invalid asset. This token is not supported by the protocol.",
+  BadDecimals: "Token decimal configuration is invalid.",
+  BadDiscount: "Invalid discount factor for this asset.",
+  BadMinimum: "The minimum amount is set incorrectly.",
+  BadPrice: "The price feed returned an invalid or stale price.",
+  BorrowTooSmall:
+    "Borrow amount is too small. The minimum borrow amount was not met.",
+  BorrowCFTooLarge:
+    "Borrow collateral factor is too large for this configuration.",
+  InsufficientReserves: "The protocol does not have enough reserves.",
+  LiquidateCFTooLarge:
+    "Liquidation collateral factor is too large for this configuration.",
+  NoSelfTransfer: "You cannot transfer tokens to yourself.",
+  NotCollateralized:
+    "Your position is not sufficiently collateralized. Add more collateral.",
+  NotForSale: "This collateral is not available for purchase.",
+  NotLiquidatable: "This position cannot be liquidated — it is still healthy.",
+  ReentrantCallBlocked: "Re-entrant call detected and blocked for security.",
+  SupplyCapExceeded:
+    "Supply cap exceeded for this asset. Try a smaller amount.",
+  TooManyAssets: "Maximum number of collateral assets reached.",
+  TooMuchSlippage:
+    "Too much slippage. The price moved beyond the acceptable range.",
+  TransferInFailed:
+    "Token transfer into the protocol failed. Check your approval and balance.",
+  TransferOutFailed:
+    "Token transfer from the protocol failed. Please try again.",
 
   // ============================================
   // Gas Related Errors
@@ -407,6 +514,25 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "4901": "Wallet is connected to a different network. Please switch networks.",
   "5000": "User rejected the request.",
   "5001": "Chain ID does not match.",
+
+  // ============================================
+  // WalletConnect v2 Error Codes
+  // ============================================
+  invalidMethod: "Invalid method requested via WalletConnect.",
+  invalidEvent: "Invalid event sent via WalletConnect.",
+  "3001": "Unauthorized method. Your wallet doesn't support this action.",
+  "3002": "Unauthorized event. Your wallet rejected this notification.",
+  "3005":
+    "Unauthorized chain. Your wallet doesn't support this network via WalletConnect.",
+  "5100": "The requested chain is not supported by this wallet.",
+  "5101": "The requested method is not supported by this wallet.",
+  "5102": "The requested event is not supported by this wallet.",
+  "5103": "The requested account is not supported by this wallet.",
+  "6000": "Wallet disconnected by user.",
+  "7000": "WalletConnect session setup failed. Please try again.",
+  "7001": "No active session found. Please reconnect your wallet.",
+  "8000": "WalletConnect session request expired. Please try again.",
+
   // Viem-specific errors
   InternalRpcError: "Internal RPC error. Please try again.",
   HttpRequestError: "HTTP request failed. Please check your connection.",
@@ -525,6 +651,31 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   AccountNotFound: "The specified account doesn't exist.",
   InstructionError: "Transaction instruction failed. Please check your inputs.",
   InvalidAccountData: "Invalid account data. Please try again.",
+  SendTransactionError:
+    "Failed to send the Solana transaction. Please try again.",
+  TransactionExpiredBlockheightExceededError:
+    "Transaction expired because block height was exceeded. Please try again.",
+  TransactionExpiredTimeoutError:
+    "Transaction timed out before being confirmed. It may still succeed.",
+  GenericError: "A generic error occurred. Please try again.",
+  InvalidArgument: "Invalid argument passed to the program.",
+  InvalidInstructionData: "The instruction data is invalid.",
+  AccountDataTooSmall: "The account data is too small for this operation.",
+  InsufficientFunds: "Insufficient funds to complete this transaction.",
+  IncorrectProgramId: "The program ID does not match the expected program.",
+  MissingRequiredSignature:
+    "A required signature is missing from the transaction.",
+  AccountAlreadyInitialized: "This account has already been initialized.",
+  UninitializedAccount: "The account has not been initialized yet.",
+  AccountBorrowFailed: "Failed to borrow the account data. Try again.",
+  MaxSeedLengthExceeded: "The seed length exceeds the maximum allowed.",
+  InvalidSeeds: "The provided seeds are invalid for this program address.",
+  AccountNotRentExempt:
+    "The account does not have enough SOL to be rent-exempt.",
+  MaxAccountsDataAllocationsExceeded:
+    "Maximum account data allocation exceeded.",
+  MaxAccountsExceeded:
+    "Too many accounts in this transaction. Try splitting into smaller transactions.",
   // Solana / Jupiter Aggregator Errors
   "0x1771":
     "Price moved beyond your slippage limit on Solana. Try increasing it.",
@@ -1064,4 +1215,73 @@ export const LOCAL_ERROR_MAP: Record<string, string> = {
   "0xf4844814":
     "Slippage error: The amount out is less than your minimum requirement.",
   "0x31a57e3b": "The deadline for this transaction has passed.",
+  "0xe450d38c": "Insufficient token balance (ERC-20).",
+  "0xfb8f41b2": "Insufficient token allowance (ERC-20). Please approve first.",
+  "0xf4d678b8": "Insufficient balance for this operation.",
+  "0x098fb561": "Insufficient input amount. Try increasing your trade size.",
+  "0x42301c23":
+    "Insufficient output amount. Try increasing slippage tolerance.",
+  "0xbb55fd27": "Insufficient liquidity in the pool.",
+  "0x203d82d8": "Transaction deadline has expired. Please try again.",
+  "0x5212cba1":
+    "Token balances were not settled after the operation (CurrencyNotSettled).",
+  "0x486aa307": "This pool has not been initialized (PoolNotInitialized).",
+  "0xb02b5dc2": "Tick spacing too large for this pool configuration.",
+  "0x16fe7696": "Tick spacing too small for this pool configuration.",
+  "0xeaa6c6eb": "Token addresses are out of order or identical.",
+  "0xbe8b8507": "The swap amount cannot be zero.",
+  "0xe65af6a0": "The hook address does not match required permission flags.",
+  "0x1e048e1d": "The pool hook returned an invalid response.",
+  "0x36bc48c5": "The call to the pool hook failed.",
+  "0xfa0b71d6": "The hook is taking more tokens than the swap amount allows.",
+  "0xfc5bee12": "The fee exceeds the maximum allowed value.",
+  "0xaefeb924": "Cannot update an empty liquidity position.",
+  "0x8774be48": "Reserves must be synced before this operation.",
+  "0xd4d8f3e6": "The tick is not aligned with the pool's tick spacing.",
+
+  // ============================================
+  // Solidity Panic Codes
+  // ============================================
+  "Panic(0x00)": "Generic compiler panic. The transaction was reverted.",
+  "Panic(0x01)": "Assertion failed in the smart contract.",
+  "Panic(0x11)":
+    "Arithmetic overflow or underflow. The calculation exceeded safe bounds.",
+  "Panic(0x12)": "Division or modulo by zero.",
+  "Panic(0x21)": "Converted a value that is too large or negative to an enum.",
+  "Panic(0x22)": "Incorrectly encoded storage byte array.",
+  "Panic(0x31)": "Called pop on an empty array.",
+  "Panic(0x32)": "Array index is out of bounds.",
+  "Panic(0x41)": "Too much memory was allocated.",
+  "Panic(0x51)": "Called a zero-initialized internal function.",
+
+  // ============================================
+  // Common DeFi Protocol Errors (Generic)
+  // ============================================
+  OwnableUnauthorizedAccount: "You are not the owner of this contract.",
+  OwnableInvalidOwner: "Invalid owner address provided.",
+  EnforcedPause: "This contract is currently paused.",
+  ExpectedPause: "This contract is expected to be paused but is not.",
+  ReentrancyGuardReentrantCall:
+    "Re-entrant call detected and blocked for security.",
+  AccessControlUnauthorizedAccount:
+    "You do not have the required role to perform this action.",
+  AccessControlBadConfirmation:
+    "Role renunciation confirmation does not match.",
+  SafeERC20FailedOperation:
+    "Token operation failed. Check approval and balance.",
+  FailedCall: "External call failed. Please try again.",
+  AddressEmptyCode: "The target address has no contract code deployed.",
+  AddressInsufficientBalance:
+    "The contract does not have enough balance to send.",
+  MathOverflowedMulDiv: "Math overflow in multiplication/division.",
+  CheckpointUnorderedInsertion:
+    "Checkpoint insertion is not in chronological order.",
+  "execution reverted: ERC20: transfer amount exceeds balance":
+    "You're trying to transfer more tokens than you have.",
+  "execution reverted: ERC20: transfer amount exceeds allowance":
+    "Token approval needed. Please approve the token first.",
+  "execution reverted: ERC721: transfer caller is not owner nor approved":
+    "You don't own this NFT or haven't approved the transfer.",
+  "execution reverted: Ownable: caller is not the owner":
+    "Only the contract owner can perform this action.",
 };
