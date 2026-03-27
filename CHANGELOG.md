@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.1.0...v2.2.0) (2026-03-27)
+
+
+### Features
+
+* add 154 error patterns (Uniswap V4, Compound V3, Aave V3, WalletConnect v2, Solana, panic codes, OpenZeppelin) ([788ed66](https://github.com/halilatilla/web3-error-humanizer/commit/788ed6669ecaa1abeccbc61c429e269c6594f19f))
+
 # [2.1.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.0.0...v2.1.0) (2026-03-27)
 
 
