@@ -1,6 +1,6 @@
 # web3-error-humanizer
 
-> Transform cryptic Web3 errors into human-friendly messages. 770+ local patterns, optional AI fallback.
+> A developer toolkit for Web3 errors -- structured classification, severity, actionable suggestions, and 770+ local patterns. Optional AI fallback.
 
 [![npm version](https://img.shields.io/npm/v/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
 [![npm downloads](https://img.shields.io/npm/dm/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
@@ -47,9 +47,32 @@ const message = humanizeError(error);
 // "Price moved too much. Try increasing your slippage tolerance."
 ```
 
+Or get **full structured output** for building smart UIs:
+
+```typescript
+import { humanizeErrorDetailed, isRecoverable, classifyError } from "web3-error-humanizer";
+
+const result = humanizeErrorDetailed(error);
+// {
+//   message:     "Price moved too much. Try increasing your slippage tolerance.",
+//   category:    "slippage",
+//   severity:    "warning",
+//   suggestion:  "Increase your slippage tolerance or try a smaller amount.",
+//   recoverable: true,
+//   source:      "local",
+//   matchedKey:  "INSUFFICIENT_OUTPUT_AMOUNT",
+//   rawMessage:  "INSUFFICIENT_OUTPUT_AMOUNT"
+// }
+
+if (result.category === "insufficient_allowance") showApproveButton();
+if (result.recoverable) showRetryButton();
+```
+
 ## Features
 
 - **770+ local error patterns** -- Most errors matched instantly without API calls (O(1) exact matches)
+- **Structured error output** -- Category, severity, suggestion, and recoverability for every error
+- **16 error categories** -- `user_rejection`, `insufficient_funds`, `slippage`, `gas`, `network`, `bridge`, and more
 - **Zero dependencies** -- The main entry point has no runtime dependencies at all
 - **AI fallback** -- Unknown errors optionally analyzed by GPT-4o-mini (separate import)
 - **viem-compatible** -- Deep error extraction for nested blockchain errors (viem is optional)
@@ -138,6 +161,83 @@ try {
 
 > Requires `openai` as a peer dependency: `npm install openai`
 
+## Toolkit API -- Structured Error Output
+
+The toolkit API gives you programmatic control over your error UX -- not just display strings.
+
+### Error Categories
+
+Every matched error is classified into one of 16 categories:
+
+| Category | Description | Severity | Recoverable |
+| --- | --- | --- | --- |
+| `user_rejection` | User cancelled/rejected in wallet | `info` | Yes |
+| `insufficient_funds` | Not enough balance or gas | `error` | Yes |
+| `insufficient_allowance` | Token needs approval first | `warning` | Yes |
+| `slippage` | Price moved beyond tolerance | `warning` | Yes |
+| `liquidity` | Pool has no/low liquidity | `error` | Yes |
+| `gas` | Gas estimation or pricing failed | `error` | Yes |
+| `nonce` | Transaction ordering issue | `warning` | Yes |
+| `network` | RPC / connection problems | `error` | Yes |
+| `contract_error` | Smart contract reverted | `error` | No |
+| `timeout` | Transaction/request timed out | `warning` | Yes |
+| `wallet_connection` | Wallet not connected/locked | `error` | Yes |
+| `chain_mismatch` | Wrong network selected | `warning` | Yes |
+| `protocol_limit` | Supply/borrow caps, paused state | `error` | Yes |
+| `signature` | Signing failed | `error` | Yes |
+| `bridge` | Cross-chain bridge errors | `error` | Yes |
+| `unknown` | Unrecognized error | `error` | No |
+
+### Building Smart Error UIs
+
+```typescript
+import {
+  humanizeErrorDetailed,
+  classifyError,
+  isRecoverable,
+  getSuggestion,
+} from "web3-error-humanizer";
+
+try {
+  await sendTransaction();
+} catch (err) {
+  const result = humanizeErrorDetailed(err);
+
+  // Display the message
+  showToast(result.message);
+
+  // Branch UI based on category
+  if (result.category === "insufficient_allowance") {
+    showApproveButton();
+  } else if (result.category === "chain_mismatch") {
+    showSwitchNetworkButton();
+  } else if (result.category === "insufficient_funds") {
+    showAddFundsLink();
+  } else if (result.recoverable) {
+    showRetryButton();
+  }
+
+  // Log structured analytics
+  analytics.track("tx_error", {
+    category: result.category,
+    severity: result.severity,
+    recoverable: result.recoverable,
+    raw: result.rawMessage,
+  });
+}
+```
+
+### Quick Classification (No Humanization)
+
+```typescript
+import { classifyError, isRecoverable, getSuggestion, getErrorSeverity } from "web3-error-humanizer";
+
+const category = classifyError(error);       // "slippage"
+const canRetry = isRecoverable(error);       // true
+const nextStep = getSuggestion(error);       // "Increase your slippage tolerance or try a smaller amount."
+const severity = getErrorSeverity(error);    // "warning"
+```
+
 ## Usage with Context
 
 Provide swap context for smarter AI responses:
@@ -190,32 +290,86 @@ if (message) {
 
 #### `humanizeErrorDetailed(error, fallback?)`
 
-Local-only humanization that also returns metadata (matched key, source, raw message).
+Local-only humanization that returns a rich `HumanizedResult` object:
 
 ```typescript
 import { humanizeErrorDetailed } from "web3-error-humanizer";
 
 const result = humanizeErrorDetailed(error);
 // {
-//   message: "Price moved too much. Try increasing your slippage tolerance.",
-//   source: "local",
-//   matchedKey: "INSUFFICIENT_OUTPUT_AMOUNT",
-//   rawMessage: "INSUFFICIENT_OUTPUT_AMOUNT"
+//   message:     "Price moved too much. Try increasing your slippage tolerance.",
+//   category:    "slippage",
+//   severity:    "warning",
+//   suggestion:  "Increase your slippage tolerance or try a smaller amount.",
+//   recoverable: true,
+//   source:      "local",
+//   matchedKey:  "INSUFFICIENT_OUTPUT_AMOUNT",
+//   rawMessage:  "INSUFFICIENT_OUTPUT_AMOUNT"
 // }
 ```
 
-#### `addPattern(key, message)` / `addPatterns(map)`
+#### `classifyError(error)`
 
-Add custom error patterns at runtime. Automatically rebuilds internal lookup indexes.
+Returns the `ErrorCategory` for an error without humanizing it. Returns `"unknown"` if no match.
+
+```typescript
+import { classifyError } from "web3-error-humanizer";
+
+classifyError(new Error("INSUFFICIENT_FUNDS"));  // "insufficient_funds"
+classifyError(new Error("ACTION_REJECTED"));     // "user_rejection"
+classifyError({ code: 4001, message: "..." });   // "user_rejection"
+```
+
+#### `isRecoverable(error)` / `getSuggestion(error)` / `getErrorSeverity(error)`
+
+```typescript
+import { isRecoverable, getSuggestion, getErrorSeverity } from "web3-error-humanizer";
+
+isRecoverable(new Error("out of gas"));         // true
+isRecoverable(new Error("execution reverted")); // false
+
+getSuggestion(new Error("INSUFFICIENT_FUNDS"));
+// "Add more funds to your wallet and try again."
+
+getErrorSeverity(new Error("ACTION_REJECTED")); // "info"
+getErrorSeverity(new Error("NETWORK_ERROR"));   // "error"
+```
+
+#### `extractRawMessage(error)`
+
+Extracts the raw error message from any error object (Error, ethers, viem, plain object, etc.).
+
+```typescript
+import { extractRawMessage } from "web3-error-humanizer";
+
+extractRawMessage(new Error("out of gas"));       // "out of gas"
+extractRawMessage({ reason: "INSUFFICIENT_FUNDS" }); // "INSUFFICIENT_FUNDS"
+extractRawMessage(null);                           // "Unknown error"
+```
+
+#### `addPattern(key, message, category?)` / `addPatterns(map)`
+
+Add custom error patterns at runtime. Optionally specify a category for structured classification.
 
 ```typescript
 import { addPattern, addPatterns } from "web3-error-humanizer";
 
+// Simple (defaults to "unknown" category)
 addPattern("CUSTOM_DEX_ERROR", "Your custom message here.");
 
+// With category
+addPattern("MY_SLIPPAGE_ERROR", "Price moved.", "slippage");
+
+// Batch add (string values default to "unknown" category)
 addPatterns({
   "MyProtocol: SLIPPAGE": "Price moved. Increase slippage.",
   "MyProtocol: LOCKED": "Pool is locked. Try again later.",
+});
+
+// Batch add with categories
+addPatterns({
+  "MyProtocol: SLIPPAGE": { message: "Price moved.", category: "slippage" },
+  "MyProtocol: PAUSED": { message: "Pool paused.", category: "protocol_limit" },
 });
 ```
 
@@ -274,9 +428,36 @@ Translates a Web3 error into a human-readable message.
 
 #### `humanizer.humanizeDetailed(error, context?)`
 
-Returns `{ message, source, matchedKey?, rawMessage }`. Uses local dictionary first, then AI (if configured), otherwise the fallback message.
+Returns a full `HumanizedResult` including `message`, `category`, `severity`, `suggestion`, `recoverable`, `source`, `matchedKey`, and `rawMessage`. Uses local dictionary first, then AI (if configured), otherwise the fallback message.
 
-### `SwapContext`
+### Types
+
+#### `HumanizedResult`
+
+```typescript
+interface HumanizedResult {
+  message: string;           // Human-friendly error message
+  category: ErrorCategory;   // e.g. "slippage", "gas", "user_rejection"
+  severity: ErrorSeverity;   // "error" | "warning" | "info"
+  suggestion: string;        // Actionable next step for the user
+  recoverable: boolean;      // Can the user take action to fix this?
+  source: HumanizeSource;    // "local" | "ai" | "fallback"
+  matchedKey?: string;       // The matched pattern key (when source === "local")
+  rawMessage: string;        // The extracted raw error message
+}
+```
+
+#### `ErrorCategory`
+
+```typescript
+type ErrorCategory =
+  | "user_rejection" | "insufficient_funds" | "insufficient_allowance"
+  | "slippage" | "liquidity" | "gas" | "nonce" | "network"
+  | "contract_error" | "timeout" | "wallet_connection" | "chain_mismatch"
+  | "protocol_limit" | "signature" | "bridge" | "unknown";
+```
+
+#### `SwapContext`
 
 ```typescript
 interface SwapContext {

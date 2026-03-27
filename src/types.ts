@@ -1,16 +1,37 @@
+export type ErrorCategory =
+  | "user_rejection"
+  | "insufficient_funds"
+  | "insufficient_allowance"
+  | "slippage"
+  | "liquidity"
+  | "gas"
+  | "nonce"
+  | "network"
+  | "contract_error"
+  | "timeout"
+  | "wallet_connection"
+  | "chain_mismatch"
+  | "protocol_limit"
+  | "signature"
+  | "bridge"
+  | "unknown";
+
+export type ErrorSeverity = "error" | "warning" | "info";
+
+export interface CategoryMeta {
+  severity: ErrorSeverity;
+  recoverable: boolean;
+  suggestion: string;
+}
+
+export interface CategorizedPattern {
+  message: string;
+  category: ErrorCategory;
+}
+
 export interface HumanizerConfig {
-  /**
-   * OpenAI API key. Optional - if not provided, only local dictionary will be used.
-   */
   openaiApiKey?: string;
-  /**
-   * AI model to use (default: gpt-4o-mini). Only used if openaiApiKey is provided.
-   */
   aiModel?: string;
-  /**
-   * Fallback message when no local match and no AI available.
-   * Default: "Transaction failed. Please try again."
-   */
   fallbackMessage?: string;
 }
 
@@ -25,21 +46,13 @@ export interface SwapContext {
 export type HumanizeSource = "local" | "ai" | "fallback";
 
 export interface HumanizedResult {
-  /**
-   * Human-readable message
-   */
   message: string;
-  /**
-   * Where the message came from
-   */
   source: HumanizeSource;
-  /**
-   * The matched local error key (when source === "local")
-   */
+  category: ErrorCategory;
+  severity: ErrorSeverity;
+  suggestion: string;
+  recoverable: boolean;
   matchedKey?: string;
-  /**
-   * The extracted raw error message
-   */
   rawMessage: string;
 }
 
@@ -47,6 +60,7 @@ export type LocalErrorEntry = {
   key: string;
   keyLower: string;
   message: string;
+  category: ErrorCategory;
   isCode: boolean;
   isShortToken: boolean;
 };

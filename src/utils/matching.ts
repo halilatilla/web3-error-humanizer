@@ -1,17 +1,21 @@
-import { LOCAL_ERROR_MAP } from "../data/error-map";
-import type { LocalErrorEntry } from "../types";
+import { CATEGORIZED_PATTERNS } from "../data/error-map";
+import type { ErrorCategory, LocalErrorEntry } from "../types";
 import { normalize } from "./normalization";
 
 let exactMatchMap = new Map<string, LocalErrorEntry>();
 let codeMap = new Map<string, LocalErrorEntry>();
 let sortedSubstringEntries: LocalErrorEntry[] = [];
 
-function buildEntry(key: string, message: string): LocalErrorEntry {
+function buildEntry(
+  key: string,
+  message: string,
+  category: ErrorCategory
+): LocalErrorEntry {
   const keyLower = normalize(key);
   const hasSeparator = /[\s:._-]/.test(keyLower);
   const isCode = /^-?\d+$/.test(keyLower);
   const isShortToken = keyLower.length < 4 && !hasSeparator && !isCode;
-  return { key, keyLower, message, isCode, isShortToken };
+  return { key, keyLower, message, category, isCode, isShortToken };
 }
 
 function buildIndex(): void {
@@ -19,8 +23,10 @@ function buildIndex(): void {
   const newCode = new Map<string, LocalErrorEntry>();
   const newSubstring: LocalErrorEntry[] = [];
 
-  for (const [key, message] of Object.entries(LOCAL_ERROR_MAP)) {
-    const entry = buildEntry(key, message);
+  for (const [key, { message, category }] of Object.entries(
+    CATEGORIZED_PATTERNS
+  )) {
+    const entry = buildEntry(key, message, category);
     newExact.set(entry.keyLower, entry);
 
     if (entry.isCode) {
@@ -39,12 +45,14 @@ function buildIndex(): void {
 
 buildIndex();
 
-/**
- * Rebuild internal lookup indexes after modifying the error map.
- * Called automatically by `addPattern` / `addPatterns`.
- */
 export function rebuildIndex(): void {
   buildIndex();
+}
+
+export interface MatchResult {
+  matchedKey: string;
+  message: string;
+  category: ErrorCategory;
 }
 
 /**
@@ -55,22 +63,34 @@ export function rebuildIndex(): void {
  */
 export function matchLocalErrorDetailed(
   rawMessage: string
-): { matchedKey: string; message: string } | null {
+): MatchResult | null {
   const normalized = normalize(rawMessage);
 
   const codeMatch = codeMap.get(normalized);
   if (codeMatch) {
-    return { matchedKey: codeMatch.key, message: codeMatch.message };
+    return {
+      matchedKey: codeMatch.key,
+      message: codeMatch.message,
+      category: codeMatch.category,
+    };
   }
 
   const exactMatch = exactMatchMap.get(normalized);
   if (exactMatch) {
-    return { matchedKey: exactMatch.key, message: exactMatch.message };
+    return {
+      matchedKey: exactMatch.key,
+      message: exactMatch.message,
+      category: exactMatch.category,
+    };
   }
 
   for (const entry of sortedSubstringEntries) {
     if (normalized.includes(entry.keyLower)) {
-      return { matchedKey: entry.key, message: entry.message };
+      return {
+        matchedKey: entry.key,
+        message: entry.message,
+        category: entry.category,
+      };
     }
   }
 

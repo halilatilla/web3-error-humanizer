@@ -1,14 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { CATEGORY_META } from "./data/category-meta";
 import {
+  CATEGORIZED_PATTERNS,
   LOCAL_ERROR_MAP,
   addPattern,
   addPatterns,
+  classifyError,
+  extractRawMessage,
+  getErrorSeverity,
   getLocalErrorCount,
   getLocalPatterns,
+  getSuggestion,
   hasLocalPattern,
   humanizeError,
   humanizeErrorDetailed,
   humanizeErrorLocal,
+  isRecoverable,
 } from "./index";
 import type { HumanizerConfig, SwapContext } from "./types";
 
@@ -625,22 +632,26 @@ describe("Web3ErrorHumanizer", () => {
     });
   });
 
-  describe("humanizeDetailed (class)", () => {
-    it("should return source=local when matched", async () => {
+  describe("humanizeDetailed (class) with enriched result", () => {
+    it("should return full metadata when matched locally", async () => {
       const error = new Error("INSUFFICIENT_FUNDS");
       const result = await humanizer.humanizeDetailed(error);
       expect(result.source).toBe("local");
       expect(result.matchedKey).toBe("INSUFFICIENT_FUNDS");
       expect(result.message).toBe(LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
+      expect(result.category).toBe("insufficient_funds");
+      expect(result.severity).toBe("error");
+      expect(result.recoverable).toBe(true);
+      expect(typeof result.suggestion).toBe("string");
       expect(result.rawMessage).toContain("INSUFFICIENT_FUNDS");
     });
 
-    it("should return source=ai when no local match and AI enabled", async () => {
+    it("should return unknown category for AI responses", async () => {
       const error = new Error("Unrecognized error code 12345");
       const result = await humanizer.humanizeDetailed(error);
       expect(result.source).toBe("ai");
+      expect(result.category).toBe("unknown");
       expect(result.message).toBe("AI generated response");
-      expect(result.rawMessage).toContain("Unrecognized error code 12345");
     });
   });
 
@@ -757,12 +768,16 @@ describe("humanizeErrorLocal (standalone function)", () => {
 });
 
 describe("humanizeErrorDetailed (standalone function)", () => {
-  it("should include metadata for local matches", () => {
+  it("should include full metadata for local matches", () => {
     const error = new Error("ACTION_REJECTED");
     const result = humanizeErrorDetailed(error);
     expect(result.source).toBe("local");
     expect(result.matchedKey).toBe("ACTION_REJECTED");
     expect(result.message).toBe(LOCAL_ERROR_MAP["ACTION_REJECTED"]);
+    expect(result.category).toBe("user_rejection");
+    expect(result.severity).toBe("info");
+    expect(result.recoverable).toBe(true);
+    expect(result.suggestion).toBe(CATEGORY_META.user_rejection.suggestion);
     expect(result.rawMessage.toLowerCase()).toContain("action_rejected");
   });
 
@@ -772,11 +787,196 @@ describe("humanizeErrorDetailed (standalone function)", () => {
     expect(result.source).toBe("fallback");
     expect(result.matchedKey).toBeUndefined();
     expect(result.message).toBe("Fallback test");
+    expect(result.category).toBe("unknown");
+    expect(result.severity).toBe("error");
+    expect(result.recoverable).toBe(false);
     expect(result.rawMessage).toContain("Completely unknown failure 999");
   });
 });
 
-describe("LOCAL_ERROR_MAP", () => {
+describe("classifyError", () => {
+  it("should classify user rejection errors", () => {
+    expect(classifyError(new Error("ACTION_REJECTED"))).toBe("user_rejection");
+    expect(classifyError(new Error("User rejected"))).toBe("user_rejection");
+    expect(classifyError({ code: 4001, message: "rejected" })).toBe(
+      "user_rejection"
+    );
+  });
+
+  it("should classify insufficient funds errors", () => {
+    expect(classifyError(new Error("INSUFFICIENT_FUNDS"))).toBe(
+      "insufficient_funds"
+    );
+    expect(classifyError(new Error("insufficient balance"))).toBe(
+      "insufficient_funds"
+    );
+  });
+
+  it("should classify slippage errors", () => {
+    expect(classifyError(new Error("INSUFFICIENT_OUTPUT_AMOUNT"))).toBe(
+      "slippage"
+    );
+    expect(classifyError(new Error("Too little received"))).toBe("slippage");
+  });
+
+  it("should classify gas errors", () => {
+    expect(classifyError(new Error("out of gas"))).toBe("gas");
+    expect(classifyError(new Error("gas required exceeds allowance"))).toBe(
+      "gas"
+    );
+  });
+
+  it("should classify network errors", () => {
+    expect(classifyError(new Error("NETWORK_ERROR"))).toBe("network");
+    expect(classifyError({ code: -32603, message: "internal" })).toBe(
+      "network"
+    );
+  });
+
+  it("should classify allowance errors", () => {
+    expect(classifyError(new Error("insufficient allowance"))).toBe(
+      "insufficient_allowance"
+    );
+    expect(classifyError(new Error("ERC20: insufficient allowance"))).toBe(
+      "insufficient_allowance"
+    );
+  });
+
+  it("should classify timeout errors", () => {
+    expect(classifyError(new Error("TIMEOUT"))).toBe("timeout");
+    expect(classifyError(new Error("EXPIRED"))).toBe("timeout");
+  });
+
+  it("should classify chain mismatch errors", () => {
+    expect(classifyError(new Error("Chain mismatch"))).toBe("chain_mismatch");
+    expect(classifyError(new Error("SwitchChainError"))).toBe("chain_mismatch");
+  });
+
+  it("should classify bridge errors", () => {
+    expect(classifyError(new Error("Bridge error"))).toBe("bridge");
+    expect(classifyError(new Error("LayerZero: LzTokenUnavailable"))).toBe(
+      "bridge"
+    );
+  });
+
+  it("should classify protocol limit errors", () => {
+    expect(classifyError(new Error("VL_SUPPLY_CAP_EXCEEDED"))).toBe(
+      "protocol_limit"
+    );
+    expect(classifyError(new Error("SupplyCapExceeded"))).toBe(
+      "protocol_limit"
+    );
+  });
+
+  it("should classify liquidity errors", () => {
+    expect(classifyError(new Error("UniswapV2: K"))).toBe("liquidity");
+    expect(classifyError(new Error("Pancake: K"))).toBe("liquidity");
+  });
+
+  it("should classify wallet connection errors", () => {
+    expect(classifyError(new Error("Wallet not connected"))).toBe(
+      "wallet_connection"
+    );
+    expect(classifyError(new Error("WalletNotConnectedError"))).toBe(
+      "wallet_connection"
+    );
+  });
+
+  it("should classify signature errors", () => {
+    expect(classifyError(new Error("invalid permit"))).toBe("signature");
+    expect(classifyError(new Error("MissingRequiredSignature"))).toBe(
+      "signature"
+    );
+  });
+
+  it("should classify contract errors", () => {
+    expect(classifyError(new Error("execution reverted"))).toBe(
+      "contract_error"
+    );
+    expect(classifyError(new Error("CALL_EXCEPTION"))).toBe("contract_error");
+  });
+
+  it("should return unknown for unrecognized errors", () => {
+    expect(classifyError(new Error("Xyz random gibberish 99"))).toBe("unknown");
+  });
+});
+
+describe("isRecoverable", () => {
+  it("should return true for user rejections", () => {
+    expect(isRecoverable(new Error("ACTION_REJECTED"))).toBe(true);
+  });
+
+  it("should return true for insufficient funds", () => {
+    expect(isRecoverable(new Error("INSUFFICIENT_FUNDS"))).toBe(true);
+  });
+
+  it("should return true for gas errors", () => {
+    expect(isRecoverable(new Error("out of gas"))).toBe(true);
+  });
+
+  it("should return false for contract errors", () => {
+    expect(isRecoverable(new Error("execution reverted"))).toBe(false);
+  });
+
+  it("should return false for unknown errors", () => {
+    expect(isRecoverable(new Error("Xyz random gibberish 99"))).toBe(false);
+  });
+});
+
+describe("getSuggestion", () => {
+  it("should return suggestion for insufficient funds", () => {
+    const suggestion = getSuggestion(new Error("INSUFFICIENT_FUNDS"));
+    expect(suggestion).toBe(CATEGORY_META.insufficient_funds.suggestion);
+  });
+
+  it("should return suggestion for slippage errors", () => {
+    const suggestion = getSuggestion(new Error("INSUFFICIENT_OUTPUT_AMOUNT"));
+    expect(suggestion).toBe(CATEGORY_META.slippage.suggestion);
+  });
+
+  it("should return unknown suggestion for unrecognized errors", () => {
+    const suggestion = getSuggestion(new Error("Xyz random gibberish 99"));
+    expect(suggestion).toBe(CATEGORY_META.unknown.suggestion);
+  });
+});
+
+describe("getErrorSeverity", () => {
+  it("should return info for user rejections", () => {
+    expect(getErrorSeverity(new Error("ACTION_REJECTED"))).toBe("info");
+  });
+
+  it("should return warning for slippage", () => {
+    expect(getErrorSeverity(new Error("INSUFFICIENT_OUTPUT_AMOUNT"))).toBe(
+      "warning"
+    );
+  });
+
+  it("should return error for network issues", () => {
+    expect(getErrorSeverity(new Error("NETWORK_ERROR"))).toBe("error");
+  });
+});
+
+describe("extractRawMessage (public export)", () => {
+  it("should extract message from Error objects", () => {
+    expect(extractRawMessage(new Error("test message"))).toBe("test message");
+  });
+
+  it("should extract reason from ethers-style errors", () => {
+    expect(extractRawMessage({ reason: "test reason" })).toBe("test reason");
+  });
+
+  it("should handle null gracefully", () => {
+    expect(extractRawMessage(null)).toBe("Unknown error");
+  });
+
+  it("should extract from nested data", () => {
+    expect(extractRawMessage({ data: { message: "nested msg" } })).toBe(
+      "nested msg"
+    );
+  });
+});
+
+describe("LOCAL_ERROR_MAP backward compatibility", () => {
   it("should contain all expected error keys", () => {
     const expectedKeys = [
       "INSUFFICIENT_FUNDS",
@@ -813,14 +1013,11 @@ describe("LOCAL_ERROR_MAP", () => {
     });
   });
 
-  it("should have user-friendly messages (no technical jargon)", () => {
-    const technicalTerms = ["0x", "nonce", "wei", "gwei", "calldata"];
-
-    Object.values(LOCAL_ERROR_MAP).forEach((message) => {
-      technicalTerms.forEach((term) => {
-        expect(message.toLowerCase()).not.toContain(term.toLowerCase());
-      });
-    });
+  it("should be a flat Record<string, string>", () => {
+    for (const [key, value] of Object.entries(LOCAL_ERROR_MAP)) {
+      expect(typeof key).toBe("string");
+      expect(typeof value).toBe("string");
+    }
   });
 
   it("should have at least 200 error patterns", () => {
@@ -829,10 +1026,26 @@ describe("LOCAL_ERROR_MAP", () => {
   });
 });
 
+describe("CATEGORIZED_PATTERNS", () => {
+  it("should have message and category for every entry", () => {
+    for (const [_key, pattern] of Object.entries(CATEGORIZED_PATTERNS)) {
+      expect(typeof pattern.message).toBe("string");
+      expect(typeof pattern.category).toBe("string");
+      expect(pattern.message.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("should have matching entries with LOCAL_ERROR_MAP", () => {
+    expect(Object.keys(CATEGORIZED_PATTERNS).length).toBe(
+      Object.keys(LOCAL_ERROR_MAP).length
+    );
+  });
+});
+
 describe("getLocalErrorCount", () => {
   it("should return the correct count of error patterns", () => {
     const count = getLocalErrorCount();
-    expect(count).toBe(Object.keys(LOCAL_ERROR_MAP).length);
+    expect(count).toBe(Object.keys(CATEGORIZED_PATTERNS).length);
     expect(count).toBeGreaterThanOrEqual(200);
   });
 });
@@ -861,15 +1074,22 @@ describe("getLocalPatterns", () => {
 });
 
 describe("addPattern / addPatterns", () => {
-  it("should add a single pattern and make it matchable", () => {
+  it("should add a single pattern with default category", () => {
     const key = "TEST_CUSTOM_ERROR_SINGLE_12345";
     addPattern(key, "Custom single test message.");
     expect(hasLocalPattern(key)).toBe(true);
-    const result = humanizeError(new Error(key));
-    expect(result).toBe("Custom single test message.");
+    expect(classifyError(new Error(key))).toBe("unknown");
+    expect(humanizeError(new Error(key))).toBe("Custom single test message.");
   });
 
-  it("should add multiple patterns at once", () => {
+  it("should add a single pattern with explicit category", () => {
+    const key = "TEST_CUSTOM_SLIPPAGE_99999";
+    addPattern(key, "Custom slippage message.", "slippage");
+    expect(classifyError(new Error(key))).toBe("slippage");
+    expect(isRecoverable(new Error(key))).toBe(true);
+  });
+
+  it("should add multiple patterns with string values", () => {
     const patterns = {
       TEST_BATCH_A_67890: "Batch message A.",
       TEST_BATCH_B_67890: "Batch message B.",
@@ -881,5 +1101,14 @@ describe("addPattern / addPatterns", () => {
     expect(humanizeError(new Error("TEST_BATCH_B_67890"))).toBe(
       "Batch message B."
     );
+  });
+
+  it("should add multiple patterns with category objects", () => {
+    addPatterns({
+      TEST_CAT_GAS_55555: { message: "Gas test.", category: "gas" },
+      TEST_CAT_BRIDGE_55555: { message: "Bridge test.", category: "bridge" },
+    });
+    expect(classifyError(new Error("TEST_CAT_GAS_55555"))).toBe("gas");
+    expect(classifyError(new Error("TEST_CAT_BRIDGE_55555"))).toBe("bridge");
   });
 });

@@ -1,3 +1,4 @@
+import { CATEGORY_META } from "./data/category-meta";
 import { DEFAULT_FALLBACK_MESSAGE } from "./data/error-map";
 import type { HumanizedResult, HumanizerConfig, SwapContext } from "./types";
 import { extractRawMessage } from "./utils/extraction";
@@ -5,21 +6,6 @@ import { matchLocalErrorDetailed } from "./utils/matching";
 
 export * from "./index";
 
-/**
- * Web3ErrorHumanizer class with optional AI fallback.
- *
- * @example
- * // Local-only mode (no API key needed)
- * const humanizer = new Web3ErrorHumanizer();
- * const message = await humanizer.humanize(error);
- *
- * @example
- * // With AI fallback
- * const humanizer = new Web3ErrorHumanizer({
- *   openaiApiKey: process.env.OPENAI_API_KEY
- * });
- * const message = await humanizer.humanize(error);
- */
 export class Web3ErrorHumanizer {
   private openaiApiKey: string | null = null;
   private openaiInstance: unknown = null;
@@ -34,9 +20,6 @@ export class Web3ErrorHumanizer {
     this.fallbackMessage = config.fallbackMessage || DEFAULT_FALLBACK_MESSAGE;
   }
 
-  /**
-   * Check if AI fallback is enabled.
-   */
   get hasAI(): boolean {
     return this.openaiApiKey !== null;
   }
@@ -54,55 +37,66 @@ export class Web3ErrorHumanizer {
     }
   }
 
-  /**
-   * Humanize an error with metadata.
-   * Local dictionary first, then AI (if configured), else fallback.
-   */
   async humanizeDetailed(
     error: unknown,
     context?: SwapContext
   ): Promise<HumanizedResult> {
     try {
       const rawMessage = extractRawMessage(error);
-
       const localMatch = matchLocalErrorDetailed(rawMessage);
+
       if (localMatch) {
+        const meta = CATEGORY_META[localMatch.category];
         return {
           message: localMatch.message,
           matchedKey: localMatch.matchedKey,
           source: "local",
+          category: localMatch.category,
+          severity: meta.severity,
+          suggestion: meta.suggestion,
+          recoverable: meta.recoverable,
           rawMessage,
         };
       }
 
       if (this.openaiApiKey) {
         const message = await this.askAI(rawMessage, context);
+        const meta = CATEGORY_META.unknown;
         return {
           message,
           source: "ai",
+          category: "unknown",
+          severity: meta.severity,
+          suggestion: meta.suggestion,
+          recoverable: meta.recoverable,
           rawMessage,
         };
       }
 
+      const meta = CATEGORY_META.unknown;
       return {
         message: this.fallbackMessage,
         source: "fallback",
+        category: "unknown",
+        severity: meta.severity,
+        suggestion: meta.suggestion,
+        recoverable: meta.recoverable,
         rawMessage,
       };
     } catch {
+      const meta = CATEGORY_META.unknown;
       return {
         message: this.fallbackMessage,
         source: "fallback",
+        category: "unknown",
+        severity: meta.severity,
+        suggestion: meta.suggestion,
+        recoverable: meta.recoverable,
         rawMessage: "Error extraction failed",
       };
     }
   }
 
-  /**
-   * Main method to humanize an error.
-   * First checks local dictionary (free & instant).
-   * Falls back to AI if available, otherwise returns fallback message.
-   */
   async humanize(error: unknown, context?: SwapContext): Promise<string> {
     const result = await this.humanizeDetailed(error, context);
     return result.message;

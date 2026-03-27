@@ -6,25 +6,62 @@
  * Note: Set OPENAI_API_KEY environment variable for AI fallback tests
  */
 
-import { LOCAL_ERROR_MAP } from "../src/index";
 import { Web3ErrorHumanizer } from "../src/ai";
+import {
+  LOCAL_ERROR_MAP,
+  classifyError,
+  getErrorSeverity,
+  getLocalErrorCount,
+  getSuggestion,
+  humanizeErrorDetailed,
+  isRecoverable,
+} from "../src/index";
+
+// Test the toolkit API
+function testToolkitAPI() {
+  console.log("\n🛠️  Testing Toolkit API\n");
+  console.log("─".repeat(60));
+
+  const errors = [
+    new Error("INSUFFICIENT_FUNDS"),
+    new Error("ACTION_REJECTED"),
+    new Error("INSUFFICIENT_OUTPUT_AMOUNT"),
+    new Error("out of gas"),
+    new Error("Chain mismatch"),
+    new Error("execution reverted"),
+  ];
+
+  for (const error of errors) {
+    const result = humanizeErrorDetailed(error);
+    console.log(`❌ ${error.message}`);
+    console.log(`  message:     ${result.message}`);
+    console.log(`  category:    ${result.category}`);
+    console.log(`  severity:    ${result.severity}`);
+    console.log(`  suggestion:  ${result.suggestion}`);
+    console.log(`  recoverable: ${result.recoverable}`);
+    console.log(`  source:      ${result.source}`);
+    console.log();
+  }
+
+  console.log(`Total patterns: ${getLocalErrorCount()}`);
+  console.log();
+}
 
 // Test without API key (local dictionary only)
 async function testLocalDictionary() {
   console.log("\n📖 Testing Local Dictionary (no API key needed)\n");
   console.log("─".repeat(60));
 
-  // Create humanizer with dummy key (won't be used for local matches)
   const humanizer = new Web3ErrorHumanizer({
     openaiApiKey: "test-key",
   });
 
   const testCases = [
-    { error: new Error("INSUFFICIENT_FUNDS"), expected: "local match" },
-    { error: new Error("User ACTION_REJECTED"), expected: "local match" },
-    { error: new Error("INSUFFICIENT_OUTPUT_AMOUNT"), expected: "local match" },
-    { error: { reason: "TRANSFER_FROM_FAILED" }, expected: "local match" },
-    { error: { data: { message: "Pancake: K" } }, expected: "local match" },
+    { error: new Error("INSUFFICIENT_FUNDS") },
+    { error: new Error("User ACTION_REJECTED") },
+    { error: new Error("INSUFFICIENT_OUTPUT_AMOUNT") },
+    { error: { reason: "TRANSFER_FROM_FAILED" } as unknown },
+    { error: { data: { message: "Pancake: K" } } as unknown },
   ];
 
   for (const { error } of testCases) {
@@ -81,6 +118,7 @@ async function main() {
   console.log("║           web3-error-humanizer - Local Test                ║");
   console.log("╚════════════════════════════════════════════════════════════╝");
 
+  testToolkitAPI();
   showLocalMappings();
   await testLocalDictionary();
   await testAIFallback();
