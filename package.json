@@ -71,7 +71,7 @@
   "author": "halilatilla",
   "license": "MIT",
   "peerDependencies": {
-    "openai": "^4.0.0",
+    "openai": "^6.33.0",
     "viem": "^2.0.0"
   },
   "peerDependenciesMeta": {
@@ -86,7 +86,7 @@
     "@biomejs/biome": "^2.4.9",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "openai": "^4.0.0",
+    "openai": "^6.33.0",
     "semantic-release": "^25.0.3",
     "tsup": "^8.0.0",
     "tsx": "^4.21.0",
