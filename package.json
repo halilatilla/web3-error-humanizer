@@ -46,7 +46,7 @@
     "url": "https://github.com/halilatilla/web3-error-humanizer/issues"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "keywords": [
     "web3",
