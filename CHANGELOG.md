@@ -1,3 +1,10 @@
+## [2.3.2](https://github.com/halilatilla/web3-error-humanizer/compare/v2.3.1...v2.3.2) (2026-03-29)
+
+
+### Bug Fixes
+
+* clean up README.md by removing unnecessary newline ([d506a5a](https://github.com/halilatilla/web3-error-humanizer/commit/d506a5abaaf1c1ed466fbc9f690462f14c809564))
+
 ## [2.3.1](https://github.com/halilatilla/web3-error-humanizer/compare/v2.3.0...v2.3.1) (2026-03-27)
 
 
