@@ -1,3 +1,10 @@
+## [2.3.3](https://github.com/halilatilla/web3-error-humanizer/compare/v2.3.2...v2.3.3) (2026-03-29)
+
+
+### Bug Fixes
+
+* update Node.js version requirements in package.json and CI workflow ([5fd01d7](https://github.com/halilatilla/web3-error-humanizer/commit/5fd01d73cc180932a5ed480e32ee1ea2f8a7a262))
+
 ## [2.3.2](https://github.com/halilatilla/web3-error-humanizer/compare/v2.3.1...v2.3.2) (2026-03-29)
 
 
