@@ -3,7 +3,6 @@
 > A local-first developer toolkit for Web3 errors -- structured classification, severity, actionable suggestions, and 770+ local patterns. Optional AI fallback.
 
 [![npm version](https://img.shields.io/npm/v/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
