@@ -1,11 +1,7 @@
 import { getCategoryMeta, resolveErrorCategory } from "./data/category-meta";
 import {
-  BUILTIN_CATEGORIZED_PATTERNS,
-  BUILTIN_LOCAL_ERROR_MAP,
   CATEGORIZED_PATTERNS,
   DEFAULT_FALLBACK_MESSAGE,
-  LOCAL_ERROR_MAP,
-  resetCustomPatterns,
   syncLocalErrorMap,
 } from "./data/error-map";
 import type { ErrorCategory, ErrorSeverity, HumanizedResult } from "./types";
@@ -17,17 +13,17 @@ import {
 } from "./utils/matching";
 import { normalize } from "./utils/normalization";
 
+export { CATEGORY_META } from "./data/category-meta";
 export {
   BUILTIN_CATEGORIZED_PATTERNS,
   BUILTIN_LOCAL_ERROR_MAP,
+  CATEGORIZED_PATTERNS,
   DEFAULT_FALLBACK_MESSAGE,
   LOCAL_ERROR_MAP,
-  CATEGORIZED_PATTERNS,
   resetCustomPatterns,
 } from "./data/error-map";
-export { CATEGORY_META } from "./data/category-meta";
-export { extractRawMessage } from "./utils/extraction";
 export * from "./types";
+export { extractRawMessage } from "./utils/extraction";
 
 function buildResult(
   match: {
@@ -206,6 +202,9 @@ export function addPattern(
 /**
  * Add multiple error patterns to the local dictionary at once.
  * Automatically rebuilds internal lookup indexes.
+ *
+ * Validation runs eagerly via .map() before any mutation, so if a key
+ * conflicts the function throws without modifying the registry.
  */
 export function addPatterns(
   patterns: Record<

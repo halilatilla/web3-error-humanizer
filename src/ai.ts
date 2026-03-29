@@ -4,6 +4,8 @@ import type { HumanizedResult, HumanizerConfig, SwapContext } from "./types";
 import { extractRawMessage } from "./utils/extraction";
 import { matchLocalErrorDetailed } from "./utils/matching";
 
+declare function setTimeout(cb: () => void, ms: number): unknown;
+
 export * from "./index";
 
 const MAX_PROMPT_ERROR_LENGTH = 500;
@@ -220,7 +222,7 @@ export class Web3ErrorHumanizer {
 
         if (isRateLimitError(error) && !isLastAttempt) {
           const delay = 2 ** attempt * 1000;
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await new Promise<void>((resolve) => setTimeout(resolve, delay));
           continue;
         }
 

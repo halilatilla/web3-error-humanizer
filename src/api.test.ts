@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CATEGORY_META } from "./data/category-meta";
 import {
-  LOCAL_ERROR_MAP,
   addPattern,
   classifyError,
   getErrorSeverity,
@@ -10,6 +9,7 @@ import {
   humanizeErrorDetailed,
   humanizeErrorLocal,
   isRecoverable,
+  LOCAL_ERROR_MAP,
   resetCustomPatterns,
 } from "./index";
 

@@ -3458,7 +3458,8 @@ export const LOCAL_ERROR_MAP: Record<string, string> =
 export function syncLocalErrorMap(): void {
   for (const key of Object.keys(LOCAL_ERROR_MAP)) {
     if (!(key in CATEGORIZED_PATTERNS)) {
-      delete LOCAL_ERROR_MAP[key];
+      LOCAL_ERROR_MAP[key] = undefined as unknown as string;
+      Reflect.deleteProperty(LOCAL_ERROR_MAP, key);
     }
   }
 
@@ -3470,7 +3471,7 @@ export function syncLocalErrorMap(): void {
 export function resetCustomPatterns(): void {
   for (const key of Object.keys(CATEGORIZED_PATTERNS)) {
     if (!(key in BUILTIN_CATEGORIZED_PATTERNS)) {
-      delete CATEGORIZED_PATTERNS[key];
+      Reflect.deleteProperty(CATEGORIZED_PATTERNS, key);
       continue;
     }
 

@@ -3,8 +3,7 @@
 > A local-first developer toolkit for Web3 errors -- structured classification, severity, actionable suggestions, and 770+ local patterns. Optional AI fallback.
 
 [![npm version](https://img.shields.io/npm/v/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
-[![npm downloads](https://img.shields.io/npm/dm/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/web3-error-humanizer)](https://bundlephobia.com/package/web3-error-humanizer)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
@@ -50,7 +49,11 @@ const message = humanizeError(error);
 Or get **full structured output** for building smart UIs:
 
 ```typescript
-import { humanizeErrorDetailed, isRecoverable, classifyError } from "web3-error-humanizer";
+import {
+  humanizeErrorDetailed,
+  isRecoverable,
+  classifyError,
+} from "web3-error-humanizer";
 
 const result = humanizeErrorDetailed(error);
 // {
@@ -178,24 +181,24 @@ The toolkit API gives you programmatic control over your error UX -- not just di
 
 Every matched error is classified into one of 16 categories:
 
-| Category | Description | Severity | Recoverable |
-| --- | --- | --- | --- |
-| `user_rejection` | User cancelled/rejected in wallet | `info` | Yes |
-| `insufficient_funds` | Not enough balance or gas | `error` | Yes |
-| `insufficient_allowance` | Token needs approval first | `warning` | Yes |
-| `slippage` | Price moved beyond tolerance | `warning` | Yes |
-| `liquidity` | Pool has no/low liquidity | `error` | Yes |
-| `gas` | Gas estimation or pricing failed | `error` | Yes |
-| `nonce` | Transaction ordering issue | `warning` | Yes |
-| `network` | RPC / connection problems | `error` | Yes |
-| `contract_error` | Smart contract reverted | `error` | No |
-| `timeout` | Transaction/request timed out | `warning` | Yes |
-| `wallet_connection` | Wallet not connected/locked | `error` | Yes |
-| `chain_mismatch` | Wrong network selected | `warning` | Yes |
-| `protocol_limit` | Supply/borrow caps, paused state | `error` | Yes |
-| `signature` | Signing failed | `error` | Yes |
-| `bridge` | Cross-chain bridge errors | `error` | Yes |
-| `unknown` | Unrecognized error | `error` | No |
+| Category                 | Description                       | Severity  | Recoverable |
+| ------------------------ | --------------------------------- | --------- | ----------- |
+| `user_rejection`         | User cancelled/rejected in wallet | `info`    | Yes         |
+| `insufficient_funds`     | Not enough balance or gas         | `error`   | Yes         |
+| `insufficient_allowance` | Token needs approval first        | `warning` | Yes         |
+| `slippage`               | Price moved beyond tolerance      | `warning` | Yes         |
+| `liquidity`              | Pool has no/low liquidity         | `error`   | Yes         |
+| `gas`                    | Gas estimation or pricing failed  | `error`   | Yes         |
+| `nonce`                  | Transaction ordering issue        | `warning` | Yes         |
+| `network`                | RPC / connection problems         | `error`   | Yes         |
+| `contract_error`         | Smart contract reverted           | `error`   | No          |
+| `timeout`                | Transaction/request timed out     | `warning` | Yes         |
+| `wallet_connection`      | Wallet not connected/locked       | `error`   | Yes         |
+| `chain_mismatch`         | Wrong network selected            | `warning` | Yes         |
+| `protocol_limit`         | Supply/borrow caps, paused state  | `error`   | Yes         |
+| `signature`              | Signing failed                    | `error`   | Yes         |
+| `bridge`                 | Cross-chain bridge errors         | `error`   | Yes         |
+| `unknown`                | Unrecognized error                | `error`   | No          |
 
 ### Building Smart Error UIs
 
@@ -239,12 +242,17 @@ try {
 ### Quick Classification (No Humanization)
 
 ```typescript
-import { classifyError, isRecoverable, getSuggestion, getErrorSeverity } from "web3-error-humanizer";
+import {
+  classifyError,
+  isRecoverable,
+  getSuggestion,
+  getErrorSeverity,
+} from "web3-error-humanizer";
 
-const category = classifyError(error);       // "slippage"
-const canRetry = isRecoverable(error);       // true
-const nextStep = getSuggestion(error);       // "Increase your slippage tolerance or try a smaller amount."
-const severity = getErrorSeverity(error);    // "warning"
+const category = classifyError(error); // "slippage"
+const canRetry = isRecoverable(error); // true
+const nextStep = getSuggestion(error); // "Increase your slippage tolerance or try a smaller amount."
+const severity = getErrorSeverity(error); // "warning"
 ```
 
 ## Usage with Context
@@ -324,24 +332,28 @@ Returns the `ErrorCategory` for an error without humanizing it. Returns `"unknow
 ```typescript
 import { classifyError } from "web3-error-humanizer";
 
-classifyError(new Error("INSUFFICIENT_FUNDS"));  // "insufficient_funds"
-classifyError(new Error("ACTION_REJECTED"));     // "user_rejection"
-classifyError({ code: 4001, message: "..." });   // "user_rejection"
+classifyError(new Error("INSUFFICIENT_FUNDS")); // "insufficient_funds"
+classifyError(new Error("ACTION_REJECTED")); // "user_rejection"
+classifyError({ code: 4001, message: "..." }); // "user_rejection"
 ```
 
 #### `isRecoverable(error)` / `getSuggestion(error)` / `getErrorSeverity(error)`
 
 ```typescript
-import { isRecoverable, getSuggestion, getErrorSeverity } from "web3-error-humanizer";
+import {
+  isRecoverable,
+  getSuggestion,
+  getErrorSeverity,
+} from "web3-error-humanizer";
 
-isRecoverable(new Error("out of gas"));         // true
+isRecoverable(new Error("out of gas")); // true
 isRecoverable(new Error("execution reverted")); // false
 
 getSuggestion(new Error("INSUFFICIENT_FUNDS"));
 // "Add more funds to your wallet and try again."
 
 getErrorSeverity(new Error("ACTION_REJECTED")); // "info"
-getErrorSeverity(new Error("NETWORK_ERROR"));   // "error"
+getErrorSeverity(new Error("NETWORK_ERROR")); // "error"
 ```
 
 #### `extractRawMessage(error)`
@@ -351,9 +363,9 @@ Extracts the raw error message from any error object (Error, ethers, viem, plain
 ```typescript
 import { extractRawMessage } from "web3-error-humanizer";
 
-extractRawMessage(new Error("out of gas"));       // "out of gas"
+extractRawMessage(new Error("out of gas")); // "out of gas"
 extractRawMessage({ reason: "INSUFFICIENT_FUNDS" }); // "INSUFFICIENT_FUNDS"
-extractRawMessage(null);                           // "Unknown error"
+extractRawMessage(null); // "Unknown error"
 ```
 
 #### `addPattern(key, message, category?)` / `addPatterns(map)`
@@ -468,14 +480,14 @@ Returns a full `HumanizedResult` including `message`, `category`, `severity`, `s
 
 ```typescript
 interface HumanizedResult {
-  message: string;           // Human-friendly error message
-  category: ErrorCategory;   // e.g. "slippage", "gas", "user_rejection"
-  severity: ErrorSeverity;   // "error" | "warning" | "info"
-  suggestion: string;        // Actionable next step for the user
-  recoverable: boolean;      // Can the user take action to fix this?
-  source: HumanizeSource;    // "local" | "ai" | "fallback"
-  matchedKey?: string;       // The matched pattern key (when source === "local")
-  rawMessage: string;        // The extracted raw error message
+  message: string; // Human-friendly error message
+  category: ErrorCategory; // e.g. "slippage", "gas", "user_rejection"
+  severity: ErrorSeverity; // "error" | "warning" | "info"
+  suggestion: string; // Actionable next step for the user
+  recoverable: boolean; // Can the user take action to fix this?
+  source: HumanizeSource; // "local" | "ai" | "fallback"
+  matchedKey?: string; // The matched pattern key (when source === "local")
+  rawMessage: string; // The extracted raw error message
 }
 ```
 
@@ -483,10 +495,22 @@ interface HumanizedResult {
 
 ```typescript
 type ErrorCategory =
-  | "user_rejection" | "insufficient_funds" | "insufficient_allowance"
-  | "slippage" | "liquidity" | "gas" | "nonce" | "network"
-  | "contract_error" | "timeout" | "wallet_connection" | "chain_mismatch"
-  | "protocol_limit" | "signature" | "bridge" | "unknown";
+  | "user_rejection"
+  | "insufficient_funds"
+  | "insufficient_allowance"
+  | "slippage"
+  | "liquidity"
+  | "gas"
+  | "nonce"
+  | "network"
+  | "contract_error"
+  | "timeout"
+  | "wallet_connection"
+  | "chain_mismatch"
+  | "protocol_limit"
+  | "signature"
+  | "bridge"
+  | "unknown";
 ```
 
 #### `SwapContext`
@@ -599,73 +623,73 @@ flowchart TD
 
 ### Uniswap V4 Custom Errors (NEW)
 
-| Error Pattern           | Human Message                                                           |
-| ----------------------- | ----------------------------------------------------------------------- |
-| `CurrencyNotSettled`    | Token balances were not settled after the swap.                         |
-| `PoolNotInitialized`    | This pool has not been initialized yet.                                 |
-| `SwapAmountCannotBeZero`| The swap amount cannot be zero.                                         |
-| `HookAddressNotValid`   | The hook address does not match the required permission flags.          |
-| `FailedHookCall`        | The call to the pool hook failed.                                       |
-| `InvalidTick`           | The specified tick value is invalid.                                    |
+| Error Pattern            | Human Message                                                  |
+| ------------------------ | -------------------------------------------------------------- |
+| `CurrencyNotSettled`     | Token balances were not settled after the swap.                |
+| `PoolNotInitialized`     | This pool has not been initialized yet.                        |
+| `SwapAmountCannotBeZero` | The swap amount cannot be zero.                                |
+| `HookAddressNotValid`    | The hook address does not match the required permission flags. |
+| `FailedHookCall`         | The call to the pool hook failed.                              |
+| `InvalidTick`            | The specified tick value is invalid.                           |
 
 ### Compound V3 (Comet) Errors (NEW)
 
-| Error Pattern        | Human Message                                                        |
-| -------------------- | -------------------------------------------------------------------- |
-| `BorrowTooSmall`     | Borrow amount is too small. The minimum borrow amount was not met.   |
-| `NotCollateralized`  | Your position is not sufficiently collateralized.                    |
-| `SupplyCapExceeded`  | Supply cap exceeded for this asset.                                  |
-| `TooMuchSlippage`    | Too much slippage. The price moved beyond the acceptable range.      |
-| `TransferInFailed`   | Token transfer into the protocol failed.                             |
+| Error Pattern       | Human Message                                                      |
+| ------------------- | ------------------------------------------------------------------ |
+| `BorrowTooSmall`    | Borrow amount is too small. The minimum borrow amount was not met. |
+| `NotCollateralized` | Your position is not sufficiently collateralized.                  |
+| `SupplyCapExceeded` | Supply cap exceeded for this asset.                                |
+| `TooMuchSlippage`   | Too much slippage. The price moved beyond the acceptable range.    |
+| `TransferInFailed`  | Token transfer into the protocol failed.                           |
 
 ### Aave V3 Numeric Error Codes (NEW)
 
-| Code | Human Message                                                          |
-| ---- | ---------------------------------------------------------------------- |
-| `27` | This reserve is currently inactive.                                    |
-| `28` | This reserve is frozen. You cannot perform this action right now.      |
-| `35` | Your health factor is too low. Add collateral or repay some debt.      |
-| `50` | Borrow cap exceeded for this reserve. Try a smaller amount.            |
-| `51` | Supply cap exceeded for this reserve. Try a smaller deposit.           |
-| `91` | Flash loans are disabled for this asset.                               |
+| Code | Human Message                                                     |
+| ---- | ----------------------------------------------------------------- |
+| `27` | This reserve is currently inactive.                               |
+| `28` | This reserve is frozen. You cannot perform this action right now. |
+| `35` | Your health factor is too low. Add collateral or repay some debt. |
+| `50` | Borrow cap exceeded for this reserve. Try a smaller amount.       |
+| `51` | Supply cap exceeded for this reserve. Try a smaller deposit.      |
+| `91` | Flash loans are disabled for this asset.                          |
 
 ### WalletConnect v2 Error Codes (NEW)
 
-| Code   | Human Message                                                    |
-| ------ | ---------------------------------------------------------------- |
-| `3001` | Unauthorized method. Your wallet doesn't support this action.    |
-| `5100` | The requested chain is not supported by this wallet.             |
-| `7001` | No active session found. Please reconnect your wallet.           |
-| `8000` | WalletConnect session request expired. Please try again.         |
+| Code   | Human Message                                                 |
+| ------ | ------------------------------------------------------------- |
+| `3001` | Unauthorized method. Your wallet doesn't support this action. |
+| `5100` | The requested chain is not supported by this wallet.          |
+| `7001` | No active session found. Please reconnect your wallet.        |
+| `8000` | WalletConnect session request expired. Please try again.      |
 
 ### Solana Program Errors (NEW)
 
-| Error Pattern                                    | Human Message                                         |
-| ------------------------------------------------ | ----------------------------------------------------- |
-| `SendTransactionError`                           | Failed to send the Solana transaction.                |
-| `TransactionExpiredBlockheightExceededError`      | Transaction expired because block height exceeded.    |
-| `MissingRequiredSignature`                        | A required signature is missing from the transaction. |
-| `AccountNotRentExempt`                            | Account does not have enough SOL to be rent-exempt.   |
+| Error Pattern                                | Human Message                                         |
+| -------------------------------------------- | ----------------------------------------------------- |
+| `SendTransactionError`                       | Failed to send the Solana transaction.                |
+| `TransactionExpiredBlockheightExceededError` | Transaction expired because block height exceeded.    |
+| `MissingRequiredSignature`                   | A required signature is missing from the transaction. |
+| `AccountNotRentExempt`                       | Account does not have enough SOL to be rent-exempt.   |
 
 ### Solidity Panic Codes & Selectors (NEW)
 
-| Error Pattern    | Human Message                                              |
-| ---------------- | ---------------------------------------------------------- |
-| `Panic(0x11)`    | Arithmetic overflow or underflow.                          |
-| `Panic(0x12)`    | Division or modulo by zero.                                |
-| `Panic(0x32)`    | Array index is out of bounds.                              |
-| `0xe450d38c`     | Insufficient token balance (ERC-20).                       |
-| `0xfb8f41b2`     | Insufficient token allowance (ERC-20).                     |
-| `0x5212cba1`     | Token balances not settled (Uniswap V4 CurrencyNotSettled).|
+| Error Pattern | Human Message                                               |
+| ------------- | ----------------------------------------------------------- |
+| `Panic(0x11)` | Arithmetic overflow or underflow.                           |
+| `Panic(0x12)` | Division or modulo by zero.                                 |
+| `Panic(0x32)` | Array index is out of bounds.                               |
+| `0xe450d38c`  | Insufficient token balance (ERC-20).                        |
+| `0xfb8f41b2`  | Insufficient token allowance (ERC-20).                      |
+| `0x5212cba1`  | Token balances not settled (Uniswap V4 CurrencyNotSettled). |
 
 ### OpenZeppelin / Common Contract Errors (NEW)
 
-| Error Pattern                      | Human Message                                         |
-| ---------------------------------- | ----------------------------------------------------- |
-| `OwnableUnauthorizedAccount`       | You are not the owner of this contract.               |
-| `EnforcedPause`                    | This contract is currently paused.                    |
-| `ReentrancyGuardReentrantCall`     | Re-entrant call detected and blocked.                 |
-| `AccessControlUnauthorizedAccount` | You do not have the required role.                    |
+| Error Pattern                      | Human Message                           |
+| ---------------------------------- | --------------------------------------- |
+| `OwnableUnauthorizedAccount`       | You are not the owner of this contract. |
+| `EnforcedPause`                    | This contract is currently paused.      |
+| `ReentrancyGuardReentrantCall`     | Re-entrant call detected and blocked.   |
+| `AccessControlUnauthorizedAccount` | You do not have the required role.      |
 
 ### Bridge & Cross-Chain
 
@@ -705,10 +729,7 @@ export async function POST(request: NextRequest) {
 // lib/humanize-error.ts
 import { humanizeError } from "web3-error-humanizer";
 
-export async function humanizeSwapError(
-  error: unknown,
-  context?: SwapContext
-) {
+export async function humanizeSwapError(error: unknown, context?: SwapContext) {
   // Try local match first (instant, no network)
   const localResult = humanizeError(error);
   if (localResult !== "Transaction failed. Please try again.") {
@@ -716,8 +737,7 @@ export async function humanizeSwapError(
   }
 
   // Fall back to AI via server
-  const errorMessage =
-    error instanceof Error ? error.message : String(error);
+  const errorMessage = error instanceof Error ? error.message : String(error);
   const response = await fetch("/api/humanize-error", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

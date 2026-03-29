@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  addPattern,
+  addPatterns,
   BUILTIN_CATEGORIZED_PATTERNS,
   BUILTIN_LOCAL_ERROR_MAP,
   CATEGORIZED_PATTERNS,
-  LOCAL_ERROR_MAP,
-  addPattern,
-  addPatterns,
   classifyError,
   getLocalErrorCount,
   getLocalPatterns,
   hasLocalPattern,
   humanizeError,
   isRecoverable,
+  LOCAL_ERROR_MAP,
   resetCustomPatterns,
 } from "./index";
 

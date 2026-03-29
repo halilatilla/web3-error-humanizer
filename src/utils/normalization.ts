@@ -10,14 +10,11 @@ export function normalize(value: string): string {
     return "";
   }
 
-  return (
-    value
-      .trim()
-      .toLowerCase()
-      .normalize("NFD") // Decompose unicode characters
-      // biome-ignore lint/suspicious/noMisleadingCharacterClass: We want to remove combining diacritical marks
-      .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
-      .replace(/\s+/g, " ") // Normalize whitespace
-      .replace(/[^\p{L}\p{N}\s:._-]/gu, "")
-  ); // Remove special characters except common separators
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/[^\p{L}\p{N}\s:._-]/gu, "");
 }
