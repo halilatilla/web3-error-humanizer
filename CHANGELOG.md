@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.3.3...v2.4.0) (2026-03-30)
+
+
+### Features
+
+* add API reference and examples for web3-error-humanizer ([a57c6c4](https://github.com/halilatilla/web3-error-humanizer/commit/a57c6c4f8ac4a478af0072956d49d0974925f24a))
+
 ## [2.3.3](https://github.com/halilatilla/web3-error-humanizer/compare/v2.3.2...v2.3.3) (2026-03-29)
 
 
