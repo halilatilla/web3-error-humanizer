@@ -1,8 +1,8 @@
 import { getCategoryMeta, resolveErrorCategory } from "./data/category-meta";
 import { DEFAULT_FALLBACK_MESSAGE } from "./data/error-map";
+import { extractRawMessage } from "./index";
 import type { HumanizedResult, HumanizerConfig, SwapContext } from "./types";
-import { extractRawMessage } from "./utils/extraction";
-import { matchLocalErrorDetailed } from "./utils/matching";
+import { matchLocalErrorDetailed } from "./utils/global-match";
 
 declare function setTimeout(cb: () => void, ms: number): unknown;
 

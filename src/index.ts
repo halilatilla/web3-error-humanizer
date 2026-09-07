@@ -1,17 +1,24 @@
+import { createHumanizerFromPatterns } from "./create-humanizer";
 import { getCategoryMeta, resolveErrorCategory } from "./data/category-meta";
 import {
+  BUILTIN_CATEGORIZED_PATTERNS,
   CATEGORIZED_PATTERNS,
   DEFAULT_FALLBACK_MESSAGE,
   resetCustomPatterns as resetCustomPatternsInternal,
   syncLocalErrorMap,
 } from "./data/error-map";
-import type { ErrorCategory, ErrorSeverity, HumanizedResult } from "./types";
-import { extractRawMessage } from "./utils/extraction";
+import type {
+  CreateHumanizerOptions,
+  ErrorCategory,
+  ErrorSeverity,
+  HumanizedResult,
+} from "./types";
+import { extractRawMessage as extractRawMessageCore } from "./utils/extraction";
 import {
-  getNormalizedKeyConflicts,
+  getGlobalNormalizedKeyConflicts,
   matchLocalErrorDetailed,
   rebuildIndex,
-} from "./utils/matching";
+} from "./utils/global-match";
 import { normalize } from "./utils/normalization";
 import {
   buildExtractionFailureResult,
@@ -19,7 +26,6 @@ import {
 } from "./utils/result";
 
 export type { LocalHumanizer } from "./create-humanizer";
-export { createHumanizer } from "./create-humanizer";
 export { CATEGORY_META } from "./data/category-meta";
 export {
   BUILTIN_CATEGORIZED_PATTERNS,
@@ -29,7 +35,21 @@ export {
   LOCAL_ERROR_MAP,
 } from "./data/error-map";
 export * from "./types";
-export { extractRawMessage } from "./utils/extraction";
+
+const recognizeLocal = (message: string) =>
+  matchLocalErrorDetailed(message) !== null;
+
+export function extractRawMessage(
+  error: unknown,
+  seen: WeakSet<object> = new WeakSet(),
+  isRecognized: (message: string) => boolean = recognizeLocal
+): string {
+  return extractRawMessageCore(error, seen, isRecognized);
+}
+
+export function createHumanizer(options: CreateHumanizerOptions = {}) {
+  return createHumanizerFromPatterns(BUILTIN_CATEGORIZED_PATTERNS, options);
+}
 
 export function resetCustomPatterns(): void {
   resetCustomPatternsInternal();
@@ -150,7 +170,7 @@ export function addPattern(
   message: string,
   category: ErrorCategory = "unknown"
 ): void {
-  const normalizedConflicts = getNormalizedKeyConflicts(key);
+  const normalizedConflicts = getGlobalNormalizedKeyConflicts(key);
   const isExistingPattern = key in CATEGORIZED_PATTERNS;
 
   if (!isExistingPattern && normalizedConflicts.length > 0) {
@@ -182,7 +202,7 @@ export function addPatterns(
 ): void {
   const batchNormalizedKeys = new Map<string, string>();
   const nextEntries = Object.entries(patterns).map(([key, value]) => {
-    const normalizedConflicts = getNormalizedKeyConflicts(key);
+    const normalizedConflicts = getGlobalNormalizedKeyConflicts(key);
     const isExistingPattern = key in CATEGORIZED_PATTERNS;
     const normalizedKey = normalize(key);
     const existingBatchKey = batchNormalizedKeys.get(normalizedKey);

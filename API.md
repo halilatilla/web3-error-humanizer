@@ -2,7 +2,9 @@
 
 ## Standalone Functions (No API Key Required)
 
-Import from `web3-error-humanizer` (zero dependencies).
+Import from `web3-error-humanizer` (zero dependencies, all chains).
+
+For a smaller bundle, import from `web3-error-humanizer/evm` (generic + wallets + EVM + swap-common + bridges) or `web3-error-humanizer/solana` (generic + wallets + Solana). Those entries export the same functions (`humanizeError`, `humanizeErrorDetailed`, `classifyError`, `createHumanizer`). The default import is unchanged.
 
 ### `humanizeError(error, fallback?)`
 
