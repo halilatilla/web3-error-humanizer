@@ -1,3 +1,10 @@
+# [2.6.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.5.0...v2.6.0) (2026-09-07)
+
+
+### Features
+
+* add catalog harvest error patterns ([03adba3](https://github.com/halilatilla/web3-error-humanizer/commit/03adba38859017356e01721e271eb5f504a6e0f9))
+
 # [2.5.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.4.0...v2.5.0) (2026-09-07)
 
 
