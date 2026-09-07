@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.4.0...v2.5.0) (2026-09-07)
+
+
+### Features
+
+* add scored matching and isolated createHumanizer ([47acd66](https://github.com/halilatilla/web3-error-humanizer/commit/47acd6618031f4cecc7844a91ab45387701a72a2))
+
 # [2.4.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.3.3...v2.4.0) (2026-03-30)
 
 
