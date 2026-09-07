@@ -1,0 +1,17 @@
+---
+description: Treat this repo as a zero-dep TypeScript npm library, not a Next.js app
+alwaysApply: true
+---
+
+# web3-error-humanizer is an npm library
+
+- Package manager is **npm** (`npm test`, `npm run lint`, `npm ci`). Never yarn.
+- Default import is **zero runtime deps**. OpenAI stays on `web3-error-humanizer/ai`.
+- Do not bump `package.json` version. semantic-release owns it on `main`.
+- Conventional Commits: `feat:` / `fix:` / `docs:` / `chore:`. No Next.js scopes.
+- Verify with `npm run test:run`, `npm run lint`, and `npm run build`.
+- Prefer `createHumanizer({ chain, patterns, fallbackMessage })` over process-wide `addPattern()` in app examples and tests.
+- If you mutate the singleton, call `resetCustomPatterns()` in setup/teardown so the lookup index rebuilds.
+- Messages are English. Apps localize via `category` / `matchedKey`. Do not add locale files.
+- Do not call `/ai` on a swap confirm path.
+- Do not copy Houdini rules: no `@/` imports, no React, no next-intl, no yarn.

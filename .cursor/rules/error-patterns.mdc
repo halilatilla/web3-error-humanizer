@@ -1,0 +1,23 @@
+---
+description: Dictionary conventions for Web3 error patterns
+globs: src/data/patterns/**/*.ts
+alwaysApply: false
+---
+
+# Error pattern dictionaries
+
+Add `{ message, category }` objects, not old string-map syntax:
+
+```typescript
+YOUR_ERROR_KEY: {
+  message: "A friendly explanation and what to do.",
+  category: "slippage",
+},
+```
+
+- Put keys in the matching file: `evm.ts`, `solana.ts`, `tron.ts`, `ton.ts`, `sui.ts`, `btc.ts`, `wallets.ts`, `bridges.ts`, `generic.ts`, `swap-common.ts`.
+- `src/data/error-map.ts` merges files, applies `CATEGORY_OVERRIDES`, and drops `DROPPED_KEYS` (`revert`, `reverted`, `GenericError`).
+- No generic single-word substring keys (`revert`, `timeout`, `error`).
+- Wrong-CTA categories to avoid: liquidity vs slippage; Tron energy is `gas`; Solana program errors are `contract_error`, not `wallet_connection`.
+- Message: no jargon (`reverted`, `0x…`, `nonce`, `wei`), explain why, say what to do, one sentence, end with a period.
+- Add a focused test in `src/matching.test.ts` or `src/patterns.test.ts` against `humanizeError` / `humanizeErrorDetailed` / `classifyError`.
