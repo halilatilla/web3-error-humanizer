@@ -1,3 +1,10 @@
+# [2.7.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.6.0...v2.7.0) (2026-09-07)
+
+
+### Features
+
+* add Solana TransactionError and Reown relay patterns ([ff313b7](https://github.com/halilatilla/web3-error-humanizer/commit/ff313b734c211067970c85a775f55a0fb4790b73))
+
 # [2.6.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.5.0...v2.6.0) (2026-09-07)
 
 

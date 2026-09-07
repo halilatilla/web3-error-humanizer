@@ -1,6 +1,6 @@
 {
   "name": "web3-error-humanizer",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Humanize cryptic Web3 and DEX errors into user-friendly messages. 790+ local patterns, optional AI fallback.",
   "type": "module",
   "main": "./dist/index.cjs",
