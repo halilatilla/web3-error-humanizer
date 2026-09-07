@@ -110,6 +110,30 @@ export const solanaPatterns: Record<string, CategorizedPattern> = {
     message: "The specified account doesn't exist.",
     category: "wallet_connection",
   },
+  AlreadyProcessed: {
+    message: "This transaction was already processed. Don't submit it again.",
+    category: "protocol_limit",
+  },
+  InsufficientFundsForRent: {
+    message:
+      "Your account doesn't have enough SOL to stay rent-exempt. Add SOL and try again.",
+    category: "insufficient_funds",
+  },
+  ProgramAccountNotFound: {
+    message:
+      "The program this transaction calls wasn't found. Check the app and try again.",
+    category: "contract_error",
+  },
+  SignatureFailure: {
+    message:
+      "The signature didn't verify. Sign again in your wallet and resubmit.",
+    category: "signature",
+  },
+  ClusterMaintenance: {
+    message:
+      "The network is in maintenance and isn't accepting transactions. Try again later.",
+    category: "network",
+  },
   InstructionError: {
     message: "Transaction instruction failed. Please check your inputs.",
     category: "wallet_connection",

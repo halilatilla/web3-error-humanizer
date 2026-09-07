@@ -23,6 +23,20 @@ export const walletPatterns: Record<string, CategorizedPattern> = {
       "Unauthorized chain. Your wallet doesn't support this network via WalletConnect.",
     category: "wallet_connection",
   },
+  "1013": {
+    message:
+      "Too many WalletConnect relay requests. Wait a bit, then try again.",
+    category: "protocol_limit",
+  },
+  "4008": {
+    message:
+      "Your WalletConnect session went stale. Reconnect your wallet and try again.",
+    category: "wallet_connection",
+  },
+  "4010": {
+    message: "The relay is rebalancing. Reconnect and try again.",
+    category: "network",
+  },
   "5100": {
     message: "The requested chain is not supported by this wallet.",
     category: "wallet_connection",
