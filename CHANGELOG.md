@@ -1,3 +1,10 @@
+# [2.8.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.7.0...v2.8.0) (2026-09-07)
+
+
+### Features
+
+* add /evm and /solana entry points for smaller bundles ([e6bdb0e](https://github.com/halilatilla/web3-error-humanizer/commit/e6bdb0e40a65b47a470595f48078106848d3e601))
+
 # [2.7.0](https://github.com/halilatilla/web3-error-humanizer/compare/v2.6.0...v2.7.0) (2026-09-07)
 
 
