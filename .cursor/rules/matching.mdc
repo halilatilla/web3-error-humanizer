@@ -1,0 +1,22 @@
+---
+description: Preserve scored matching and extraction behavior
+globs: src/utils/matching.ts,src/utils/extraction.ts
+alwaysApply: false
+---
+
+# Matcher and extraction
+
+Preserve the scorer in `src/utils/matching.ts`:
+
+1. Exact code / exact phrase
+2. Embedded RPC and hex codes as tokens (`-32603`, `4001`, `0x…`)
+3. Token-bounded substring, then raw substring
+4. Tie-break: `CATEGORY_PRIORITY` then key length
+
+- `user_rejection` (100) beats `signature` (50). MetaMask "User denied transaction signature" must stay `user_rejection`.
+- `TIMEOUT`, `revert` / `reverted`, and short tokens (`length < 4`, no separator) are **exact-only**.
+- Generic `1001` / `TIMEOUT` must not fire inside WalletConnect session strings.
+- `INSUFFICIENT_LIQUIDITY` is `liquidity`, not `slippage`.
+- Do not mutate a `best: T | null` inside a closure (TS narrows to `never`). Collect candidates, then `reduce`.
+- After changing `CATEGORIZED_PATTERNS` via `addPattern` / `resetCustomPatterns`, the index must rebuild (`rebuildIndex()`).
+- Any matcher or extractor change needs a regression test from the probes in `src/matching.test.ts`.
