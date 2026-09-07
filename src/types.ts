@@ -16,6 +16,15 @@ export type ErrorCategory =
   | "bridge"
   | "unknown";
 
+export type HumanizerChain =
+  | "evm"
+  | "solana"
+  | "tron"
+  | "ton"
+  | "sui"
+  | "btc"
+  | "stellar";
+
 export type ErrorSeverity = "error" | "warning" | "info";
 
 export interface CategoryMeta {
@@ -27,6 +36,7 @@ export interface CategoryMeta {
 export interface CategorizedPattern {
   message: string;
   category: ErrorCategory;
+  chain?: HumanizerChain;
 }
 
 export interface HumanizerConfig {
@@ -54,6 +64,7 @@ export interface HumanizedResult {
   recoverable: boolean;
   matchedKey?: string;
   rawMessage: string;
+  code?: string;
 }
 
 export type LocalErrorEntry = {
@@ -63,4 +74,16 @@ export type LocalErrorEntry = {
   category: ErrorCategory;
   isCode: boolean;
   isShortToken: boolean;
+  isHexCode: boolean;
+  exactOnly: boolean;
+  chain?: HumanizerChain;
 };
+
+export interface CreateHumanizerOptions {
+  chain?: HumanizerChain;
+  patterns?: Record<
+    string,
+    string | { message: string; category?: ErrorCategory }
+  >;
+  fallbackMessage?: string;
+}

@@ -96,11 +96,32 @@ extractRawMessage({ reason: "INSUFFICIENT_FUNDS" }); // "INSUFFICIENT_FUNDS"
 extractRawMessage(null); // "Unknown error"
 ```
 
+### `createHumanizer(options?)`
+
+Isolated humanizer with its own pattern registry. Use this in Next.js, tests, and multi-chain apps instead of process-wide `addPattern()`.
+
+```typescript
+import { createHumanizer } from "web3-error-humanizer";
+
+const humanizer = createHumanizer({
+  chain: "evm", // optional: evm | solana | tron | ton | sui | btc | stellar
+  fallbackMessage: "Swap failed. Try again.",
+  patterns: {
+    MY_DEX_ERROR: { message: "This pool is paused.", category: "protocol_limit" },
+  },
+});
+
+humanizer.humanizeDetailed(error);
+humanizer.classify(error);
+```
+
+`chain` excludes other protocol-specific codes (Aave `26` vs Jupiter `0x1771`). Untagged wallet and rejection patterns still match. English `message` is the default copy; i18n apps should map `category` or `matchedKey`.
+
 ### `addPattern(key, message, category?)` / `addPatterns(map)`
 
 Add custom error patterns at runtime. Optionally specify a category for structured classification.
 
-Custom patterns are **process-wide**. If you add them in tests, call `resetCustomPatterns()` between cases.
+Custom patterns are **process-wide**. Prefer `createHumanizer({ patterns })` in apps. If you use `addPattern()` in tests, call `resetCustomPatterns()` between cases -- that also rebuilds the lookup index.
 
 ```typescript
 import { addPattern, addPatterns } from "web3-error-humanizer";
@@ -135,7 +156,7 @@ import {
   getLocalPatterns,
 } from "web3-error-humanizer";
 
-console.log(getLocalErrorCount()); // 770+
+console.log(getLocalErrorCount()); // 790+
 console.log(hasLocalPattern("INSUFFICIENT_FUNDS")); // true
 console.log(getLocalPatterns()); // ["ACTION_REJECTED", "INSUFFICIENT_FUNDS", ...]
 ```
@@ -156,7 +177,7 @@ console.log(BUILTIN_LOCAL_ERROR_MAP["INSUFFICIENT_FUNDS"]);
 console.log(BUILTIN_CATEGORIZED_PATTERNS["INSUFFICIENT_FUNDS"].category);
 
 addPattern("MY_TEMP_ERROR", "Temporary message.");
-resetCustomPatterns(); // removes custom additions and restores built-ins
+resetCustomPatterns(); // removes custom additions, restores built-ins, rebuilds index
 ```
 
 ## Class-based API (Optional AI Fallback)
@@ -216,7 +237,21 @@ interface HumanizedResult {
   source: HumanizeSource; // "local" | "ai" | "fallback"
   matchedKey?: string; // The matched pattern key (when source === "local")
   rawMessage: string; // The extracted raw error message
+  code?: string; // Matched numeric or hex code, when applicable
 }
+```
+
+### `HumanizerChain`
+
+```typescript
+type HumanizerChain =
+  | "evm"
+  | "solana"
+  | "tron"
+  | "ton"
+  | "sui"
+  | "btc"
+  | "stellar";
 ```
 
 ### `ErrorCategory`

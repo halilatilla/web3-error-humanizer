@@ -11,17 +11,18 @@ When you encounter a Web3 error that isn't covered, note down:
 - Which **protocol/wallet** produced it
 - What **caused** it (slippage, insufficient funds, user rejection, etc.)
 
-### 2. Add it to the error map
+### 2. Add it to the right protocol file
 
-Open `src/data/error-map.ts` and add your entry to the appropriate section:
+Patterns live under `src/data/patterns/`. Add the entry to the matching file (`evm.ts`, `solana.ts`, `wallets.ts`, `generic.ts`, `swap-common.ts`, ...):
 
 ```typescript
-// Find the right section (or create a new one)
-// ============================================
-// Your Protocol Name
-// ============================================
-"YOUR_ERROR_KEY": "A friendly, non-technical explanation of what happened and what to do.",
+YOUR_ERROR_KEY: {
+  message: "A friendly, non-technical explanation of what happened and what to do.",
+  category: "slippage",
+},
 ```
+
+`src/data/error-map.ts` merges those files, applies category overrides, and tags chain-specific maps.
 
 ### Guidelines for error messages
 
@@ -30,10 +31,11 @@ Open `src/data/error-map.ts` and add your entry to the appropriate section:
 - **Tell the user what to do** (e.g., "Try increasing your slippage tolerance")
 - **Keep it short** -- one sentence, under 20 words if possible
 - **End with a period**
+- **Do not add generic single words** (`revert`, `timeout`, `error`) as substring patterns
 
 ### 3. Add a test
 
-Add a focused test case in the relevant test file (`src/api.test.ts`, `src/extraction.test.ts`, `src/patterns.test.ts`, or `src/ai.test.ts`) to verify your pattern works:
+Add a focused test case in the relevant test file (`src/api.test.ts`, `src/matching.test.ts`, `src/patterns.test.ts`, or `src/create-humanizer.test.ts`):
 
 ```typescript
 it("should handle YourProtocol error", () => {
@@ -64,22 +66,27 @@ npm run build       # build the package
 npm run lint        # check for linting errors
 ```
 
+The published package supports Node.js >= 20. Running `semantic-release` locally or in CI needs Node.js >= 22.14.
+
 ## Project Structure
 
 ```
 src/
 ├── index.ts              # Local-only entry point (zero deps)
+├── create-humanizer.ts   # Isolated createHumanizer() factory
 ├── ai.ts                 # AI fallback entry point (requires openai)
 ├── types.ts              # TypeScript type definitions
 ├── data/
-│   └── error-map.ts      # All 770+ built-in error patterns live here
+│   ├── error-map.ts      # Merges protocol files into the built-in registry
+│   ├── category-meta.ts  # Severity / suggestion / recoverability
+│   └── patterns/         # Protocol dictionaries (evm, solana, wallets, ...)
 └── utils/
     ├── extraction.ts     # Extract raw message from error objects
-    ├── matching.ts       # Pattern matching engine (Map + substring)
+    ├── matching.ts       # Scored matching engine
     └── normalization.ts  # String normalization for matching
 ```
 
-Custom patterns added with `addPattern()` / `addPatterns()` are process-wide. If you add them in tests, call `resetCustomPatterns()` in your setup/teardown so cases stay isolated.
+`addPattern()` / `addPatterns()` are process-wide. Prefer `createHumanizer({ patterns })` in apps and tests. If you still mutate the singleton, call `resetCustomPatterns()` in setup/teardown so the lookup index is rebuilt.
 
 ## Code Style
 

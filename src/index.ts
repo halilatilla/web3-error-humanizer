@@ -2,6 +2,7 @@ import { getCategoryMeta, resolveErrorCategory } from "./data/category-meta";
 import {
   CATEGORIZED_PATTERNS,
   DEFAULT_FALLBACK_MESSAGE,
+  resetCustomPatterns as resetCustomPatternsInternal,
   syncLocalErrorMap,
 } from "./data/error-map";
 import type { ErrorCategory, ErrorSeverity, HumanizedResult } from "./types";
@@ -12,7 +13,13 @@ import {
   rebuildIndex,
 } from "./utils/matching";
 import { normalize } from "./utils/normalization";
+import {
+  buildExtractionFailureResult,
+  buildHumanizedResult,
+} from "./utils/result";
 
+export type { LocalHumanizer } from "./create-humanizer";
+export { createHumanizer } from "./create-humanizer";
 export { CATEGORY_META } from "./data/category-meta";
 export {
   BUILTIN_CATEGORIZED_PATTERNS,
@@ -20,43 +27,13 @@ export {
   CATEGORIZED_PATTERNS,
   DEFAULT_FALLBACK_MESSAGE,
   LOCAL_ERROR_MAP,
-  resetCustomPatterns,
 } from "./data/error-map";
 export * from "./types";
 export { extractRawMessage } from "./utils/extraction";
 
-function buildResult(
-  match: {
-    matchedKey: string;
-    message: string;
-    category: ErrorCategory;
-  } | null,
-  rawMessage: string,
-  fallback: string
-): HumanizedResult {
-  if (match) {
-    const meta = getCategoryMeta(match.category);
-    return {
-      message: match.message,
-      source: "local",
-      category: resolveErrorCategory(match.category),
-      severity: meta.severity,
-      suggestion: meta.suggestion,
-      recoverable: meta.recoverable,
-      matchedKey: match.matchedKey,
-      rawMessage,
-    };
-  }
-  const meta = getCategoryMeta("unknown");
-  return {
-    message: fallback,
-    source: "fallback",
-    category: "unknown",
-    severity: meta.severity,
-    suggestion: meta.suggestion,
-    recoverable: meta.recoverable,
-    rawMessage,
-  };
+export function resetCustomPatterns(): void {
+  resetCustomPatternsInternal();
+  rebuildIndex();
 }
 
 /**
@@ -99,18 +76,9 @@ export function humanizeErrorDetailed(
   try {
     const rawMessage = extractRawMessage(error);
     const match = matchLocalErrorDetailed(rawMessage);
-    return buildResult(match, rawMessage, fallback);
+    return buildHumanizedResult(match, rawMessage, fallback);
   } catch {
-    const meta = getCategoryMeta("unknown");
-    return {
-      message: fallback,
-      source: "fallback",
-      category: "unknown",
-      severity: meta.severity,
-      suggestion: meta.suggestion,
-      recoverable: meta.recoverable,
-      rawMessage: "Error extraction failed",
-    };
+    return buildExtractionFailureResult(fallback);
   }
 }
 

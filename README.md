@@ -1,6 +1,6 @@
 # web3-error-humanizer
 
-> A local-first developer toolkit for Web3 errors -- structured classification, severity, actionable suggestions, and 770+ local patterns. Optional AI fallback.
+> A local-first developer toolkit for Web3 errors -- structured classification, severity, actionable suggestions, and 790+ local patterns. Optional AI fallback.
 
 [![npm version](https://img.shields.io/npm/v/web3-error-humanizer.svg)](https://www.npmjs.com/package/web3-error-humanizer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -67,8 +67,11 @@ const result = humanizeErrorDetailed(error);
 // }
 
 if (result.category === "insufficient_allowance") showApproveButton();
+if (result.category === "chain_mismatch") showSwitchNetworkButton();
 if (result.recoverable) showRetryButton();
 ```
+
+Apps with i18n should keep the English `message` as a fallback and map `result.category` or `result.matchedKey` through their own translator.
 
 ## Why Developers Like It
 
@@ -79,13 +82,14 @@ if (result.recoverable) showRetryButton();
 
 ## Features
 
-- **770+ local error patterns** -- O(1) exact matches, no API calls needed
-- **Structured error output** -- category, severity, suggestion, and recoverability for every error
+- **790+ local error patterns** -- exact, token, and scored substring matches, no API calls needed
+- **Structured error output** -- category, severity, suggestion, recoverability, and `matchedKey` for every error
 - **16 error categories** -- `user_rejection`, `insufficient_funds`, `slippage`, `gas`, `network`, `bridge`, and more
 - **Zero dependencies** -- the main entry point has no runtime dependencies
-- **AI fallback** -- unknown errors optionally analyzed by GPT-4o-mini (separate import)
+- **Isolated instances** -- `createHumanizer({ chain, patterns })` for Next.js, tests, and multi-chain apps
+- **AI fallback** -- unknown errors optionally analyzed by GPT-4o-mini (separate import, not for swap confirm)
 - **viem-compatible** -- deep error extraction for nested blockchain errors (viem is optional)
-- **Extensible** -- add your own patterns with `addPattern()` / `addPatterns()`
+- **Extensible** -- add your own patterns with `createHumanizer({ patterns })` or process-wide `addPattern()`
 - **Dual module** -- ESM and CommonJS, full TypeScript types included
 
 ## Supported Protocols
@@ -120,7 +124,7 @@ if (result.recoverable) showRetryButton();
 npm install web3-error-humanizer
 ```
 
-> Also works with `pnpm add` and `yarn add`. Zero dependencies for the main entry point. Install `openai` separately if you want AI fallback. Requires Node.js >= 20.
+> Also works with `pnpm add` and `yarn add`. Zero dependencies for the main entry point. Install `openai` separately if you want AI fallback. The published package runs on Node.js >= 20. Publishing a release with `semantic-release` currently needs Node.js >= 22.14.
 
 ## Quick Start
 
@@ -235,9 +239,45 @@ const nextStep = getSuggestion(error); // "Increase your slippage tolerance or t
 const severity = getErrorSeverity(error); // "warning"
 ```
 
+### Isolated instance (recommended for apps and tests)
+
+`addPattern()` mutates a process-wide registry. Prefer `createHumanizer()` when you need custom patterns, a chain hint, or test isolation:
+
+```typescript
+import { createHumanizer } from "web3-error-humanizer";
+
+const humanizer = createHumanizer({
+  chain: "evm",
+  fallbackMessage: "Swap failed. Please try again.",
+  patterns: {
+    MY_DEX_ERROR: { message: "This pool is paused.", category: "protocol_limit" },
+  },
+});
+
+const result = humanizer.humanizeDetailed(error);
+```
+
+`chain` only narrows protocol-specific codes (for example Aave `26` vs Jupiter `0x1771`). Shared wallet and rejection patterns still match. Omit `chain` to use the full dictionary.
+
+### Wagmi / viem
+
+```typescript
+import { humanizeErrorDetailed } from "web3-error-humanizer";
+
+try {
+  await walletClient.writeContract({ /* ... */ });
+} catch (error) {
+  const result = humanizeErrorDetailed(error);
+  toast.error(result.message);
+  if (result.category === "insufficient_allowance") openApprove();
+  else if (result.category === "chain_mismatch") openSwitchNetwork();
+  else if (result.recoverable) showRetry();
+}
+```
+
 ### Usage with Context
 
-Provide swap context for smarter AI responses:
+Provide swap context for smarter AI responses. Do not call `/ai` on the swap confirm path -- keep unmatched errors on the generic fallback:
 
 ```typescript
 const message = await humanizer.humanize(error, {
@@ -262,9 +302,10 @@ const message = await humanizer.humanize(error, {
 | `getSuggestion(error)` | `string` | Actionable next step |
 | `getErrorSeverity(error)` | `ErrorSeverity` | `"error"` / `"warning"` / `"info"` |
 | `extractRawMessage(error)` | `string` | Raw message from any error shape |
-| `addPattern(key, msg, category?)` | `void` | Add a custom pattern at runtime |
-| `addPatterns(map)` | `void` | Batch add patterns |
-| `resetCustomPatterns()` | `void` | Restore built-in patterns only |
+| `createHumanizer(options?)` | `LocalHumanizer` | Isolated registry with optional `chain` and `patterns` |
+| `addPattern(key, msg, category?)` | `void` | Add a custom pattern at runtime (process-wide) |
+| `addPatterns(map)` | `void` | Batch add patterns (process-wide) |
+| `resetCustomPatterns()` | `void` | Restore built-ins and rebuild the lookup index |
 | `getLocalErrorCount()` | `number` | Total patterns in registry |
 | `hasLocalPattern(key)` | `boolean` | Check if a pattern exists |
 | `getLocalPatterns()` | `string[]` | List all pattern keys |
@@ -276,7 +317,7 @@ const message = await humanizer.humanize(error, {
 ```mermaid
 flowchart TD
     A["Caught Error"] --> B["Extract Message"]
-    B --> C{"Local Dictionary\n770+ patterns"}
+    B --> C{"Local Dictionary\n790+ patterns"}
     C -->|match found| D["Instant Response\nfree, less than 1ms"]
     C -->|no match| E{"AI configured?"}
     E -->|yes| F["OpenAI API\npaid, ~500ms"]
@@ -284,17 +325,26 @@ flowchart TD
 ```
 
 1. **Extract** -- Pulls the raw error message from viem `BaseError`, ethers error objects, EIP-1193 codes, or plain strings
-2. **Match locally** -- O(1) exact lookup via `Map`, then substring matching sorted by specificity
-3. **AI fallback** -- If no local match and OpenAI is configured, generates a user-friendly explanation
+2. **Match locally** -- exact phrase/code, then embedded RPC/hex tokens, then scored substring matches (category priority, then length)
+3. **AI fallback** -- Optional `/ai` import only. Unknown errors can stay on the generic fallback.
 4. **Fallback** -- Returns a configurable default message if nothing else matches
 
 ## Limitations
 
-- Local matching is only as good as the current dictionary. Unknown protocol-specific errors still need new patterns or the optional AI path.
-- Substring matching is intentionally conservative, but it can still be less precise than exact matches for very noisy provider messages.
-- `addPattern()` and `addPatterns()` mutate a shared in-memory registry for the current process.
+- Local matching is only as good as the current dictionary. Unknown protocol-specific errors still need new patterns. Leaving them on the fallback is fine.
+- Generic single-word keys such as `TIMEOUT` are exact-only so they do not hijack unrelated messages.
+- `addPattern()` and `addPatterns()` mutate a shared in-memory registry for the current process. Prefer `createHumanizer({ patterns })` in apps and tests. `resetCustomPatterns()` restores built-ins and rebuilds the index.
 - If you use `web3-error-humanizer/ai`, do not pass secrets in error context that you would not want sent to your model provider.
 - For high-volume AI usage, consider caching responses for repeated errors.
+
+## Adopting later in an existing DEX (Houdini-style)
+
+If the app already has chain-aware helpers and `t()` keys, do not replace that layer in one shot:
+
+1. Call `humanizeErrorDetailed()` or `createHumanizer({ chain }).humanizeDetailed()` beside the existing parser.
+2. If the app already has a translation key, keep it.
+3. Otherwise use `category` / `matchedKey` to drive `t()` and CTAs.
+4. Keep `/ai` off the swap confirm path.
 
 ## More
 
