@@ -96,6 +96,24 @@ describe("scored matching", () => {
     );
   });
 
+  it("classifies Solana TransactionError and Reown relay codes", () => {
+    expect(classifyError(new Error("AlreadyProcessed"))).toBe("protocol_limit");
+    expect(classifyError(new Error("InsufficientFundsForRent"))).toBe(
+      "insufficient_funds"
+    );
+    expect(classifyError(new Error("ProgramAccountNotFound"))).toBe(
+      "contract_error"
+    );
+    expect(classifyError(new Error("SignatureFailure"))).toBe("signature");
+    expect(classifyError(new Error("ClusterMaintenance"))).toBe("network");
+
+    expect(classifyError({ code: 1013 })).toBe("protocol_limit");
+    expect(humanizeErrorDetailed({ code: 4008 }).matchedKey).toBe("4008");
+    expect(classifyError({ code: 4010 })).toBe("network");
+    expect(humanizeErrorDetailed({ code: 1001 }).matchedKey).toBe("1001");
+    expect(humanizeErrorDetailed({ code: 1001 }).category).toBe("bridge");
+  });
+
   it("rebuilds the index when custom patterns are reset", () => {
     addPattern("ZZZ_CUSTOM_RESET_TEST", "Custom reset message.", "slippage");
 
