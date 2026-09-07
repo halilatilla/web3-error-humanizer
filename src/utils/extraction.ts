@@ -1,5 +1,3 @@
-import { matchLocalErrorDetailed } from "./matching";
-
 export type MessageRecognizer = (message: string) => boolean;
 
 interface ErrorLike {
@@ -115,13 +113,10 @@ function extractFromKnownShape(
  * Extract raw message from complex Web3 error objects.
  * Supports: viem, ethers.js, web3.js, and generic error objects.
  */
-const defaultRecognizer: MessageRecognizer = (message) =>
-  matchLocalErrorDetailed(message) !== null;
-
 export function extractRawMessage(
   error: unknown,
   seen: WeakSet<object> = new WeakSet(),
-  isRecognized: MessageRecognizer = defaultRecognizer
+  isRecognized: MessageRecognizer = () => false
 ): string {
   if (error === null || error === undefined) {
     return "Unknown error";

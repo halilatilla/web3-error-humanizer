@@ -11,6 +11,7 @@ alwaysApply: true
 - Conventional Commits: `feat:` / `fix:` / `docs:` / `chore:`. No Next.js scopes.
 - Verify with `npm run test:run`, `npm run lint`, and `npm run build`.
 - Prefer `createHumanizer({ chain, patterns, fallbackMessage })` over process-wide `addPattern()` in app examples and tests.
+- EVM-only apps should import from `web3-error-humanizer/evm` so Solana/Tron/Sui/BTC dictionaries stay out of the bundle.
 - If you mutate the singleton, call `resetCustomPatterns()` in setup/teardown so the lookup index rebuilds.
 - Messages are English. Apps localize via `category` / `matchedKey`. Do not add locale files.
 - Do not call `/ai` on a swap confirm path.

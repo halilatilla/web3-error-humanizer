@@ -45,6 +45,12 @@ const message = humanizeError(error);
 // "Price moved too much. Try increasing your slippage tolerance."
 ```
 
+EVM-only apps can import a smaller dictionary (generic + wallets + EVM + bridges). The default import still includes every chain.
+
+```typescript
+import { humanizeErrorDetailed } from "web3-error-humanizer/evm";
+```
+
 Or get **full structured output** for building smart UIs:
 
 ```typescript
@@ -78,7 +84,7 @@ Apps with i18n should keep the English `message` as a fallback and map `result.c
 - **Useful without AI** -- the default import is local-only, fast, and has zero runtime dependencies
 - **Structured, not just pretty strings** -- categories, severity, suggestions, and recoverability let you build real product UX
 - **Optional AI instead of forced AI** -- unknown errors can use the `/ai` entry point, but the core package never requires an API key
-- **Safe to bundle** -- ESM + CommonJS exports, TypeScript types, and source maps in the published build
+- **Safe to bundle** -- ESM + CommonJS exports and TypeScript types. Use `/evm` or `/solana` to skip unused chain dictionaries.
 
 ## Features
 

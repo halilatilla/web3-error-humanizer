@@ -5,7 +5,7 @@
 Keep this on the client. No API key.
 
 ```typescript
-import { humanizeErrorDetailed } from "web3-error-humanizer";
+import { humanizeErrorDetailed } from "web3-error-humanizer/evm";
 
 try {
   await walletClient.writeContract({ /* ... */ });
@@ -28,7 +28,7 @@ try {
 
 ```typescript
 // lib/humanize-error.ts
-import { createHumanizer } from "web3-error-humanizer";
+import { createHumanizer } from "web3-error-humanizer/evm";
 
 const humanizer = createHumanizer({
   chain: "evm",

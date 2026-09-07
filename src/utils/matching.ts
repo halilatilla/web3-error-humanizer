@@ -1,5 +1,4 @@
 import { resolveErrorCategory } from "../data/category-meta";
-import { CATEGORIZED_PATTERNS } from "../data/error-map";
 import type {
   CategorizedPattern,
   ErrorCategory,
@@ -198,15 +197,9 @@ export function createMatchIndex(
   };
 }
 
-let globalIndex = createMatchIndex(CATEGORIZED_PATTERNS);
-
-export function rebuildIndex(): void {
-  globalIndex = createMatchIndex(CATEGORIZED_PATTERNS);
-}
-
 export function getNormalizedKeyConflicts(
   key: string,
-  index: MatchIndex = globalIndex
+  index: MatchIndex
 ): string[] {
   const normalized = normalize(key);
   const owners = index.normalizedKeyOwners.get(normalized);
@@ -299,17 +292,4 @@ export function matchAgainstIndex(
     candidate.score > winner.score ? candidate : winner
   );
   return toMatchResult(best.entry);
-}
-
-/**
- * Match error message against the process-wide dictionary:
- * 1. Exact code / phrase
- * 2. Embedded RPC and hex codes
- * 3. Scored substring matches (category priority, then length)
- */
-export function matchLocalErrorDetailed(
-  rawMessage: string,
-  chain?: HumanizerChain
-): MatchResult | null {
-  return matchAgainstIndex(globalIndex, rawMessage, chain);
 }

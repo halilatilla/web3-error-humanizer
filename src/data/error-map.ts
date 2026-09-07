@@ -1,4 +1,10 @@
-import type { CategorizedPattern, HumanizerChain } from "../types";
+import type { CategorizedPattern } from "../types";
+import { DEFAULT_FALLBACK_MESSAGE } from "./defaults";
+import {
+  clonePatternMap,
+  createLocalErrorMap,
+  mergePatternMaps,
+} from "./merge-patterns";
 import { bridgePatterns } from "./patterns/bridges";
 import { btcPatterns } from "./patterns/btc";
 import { evmPatterns } from "./patterns/evm";
@@ -10,72 +16,21 @@ import { tonPatterns } from "./patterns/ton";
 import { tronPatterns } from "./patterns/tron";
 import { walletPatterns } from "./patterns/wallets";
 
-export const DEFAULT_FALLBACK_MESSAGE = "Transaction failed. Please try again.";
-
-const DROPPED_KEYS = new Set(["revert", "reverted", "GenericError"]);
-
-const CATEGORY_OVERRIDES: Record<string, CategorizedPattern["category"]> = {
-  INSUFFICIENT_LIQUIDITY: "liquidity",
-  InsufficientLiquidity: "liquidity",
-  REVERT: "contract_error",
-  OUT_OF_ENERGY: "gas",
-  ENERGY: "gas",
-  InvalidArgument: "contract_error",
-  IncorrectProgramId: "contract_error",
-  InvalidInstructionData: "contract_error",
-  AccountDataTooSmall: "contract_error",
-  InstructionError: "contract_error",
-  InvalidAccountData: "contract_error",
-  "0x1": "unknown",
-};
-
-function withChain(
-  source: Record<string, CategorizedPattern>,
-  chain?: HumanizerChain
-): Record<string, CategorizedPattern> {
-  return Object.fromEntries(
-    Object.entries(source).map(([key, value]) => [
-      key,
-      {
-        ...value,
-        category: CATEGORY_OVERRIDES[key] ?? value.category,
-        ...(chain ? { chain } : {}),
-      },
-    ])
-  );
-}
+export { DEFAULT_FALLBACK_MESSAGE };
 
 const BUILTIN_CATEGORIZED_PATTERNS_SOURCE: Record<string, CategorizedPattern> =
-  Object.fromEntries(
-    Object.entries({
-      ...withChain(genericPatterns),
-      ...withChain(walletPatterns),
-      ...withChain(evmPatterns, "evm"),
-      ...withChain(solanaPatterns, "solana"),
-      ...withChain(tronPatterns, "tron"),
-      ...withChain(tonPatterns, "ton"),
-      ...withChain(suiPatterns, "sui"),
-      ...withChain(btcPatterns, "btc"),
-      ...withChain(bridgePatterns),
-      ...withChain(swapCommonPatterns),
-    }).filter(([key]) => !DROPPED_KEYS.has(key))
-  );
-
-function clonePatternMap(
-  source: Readonly<Record<string, CategorizedPattern>>
-): Record<string, CategorizedPattern> {
-  return Object.fromEntries(
-    Object.entries(source).map(([key, value]) => [key, { ...value }])
-  );
-}
-
-function createLocalErrorMap(
-  source: Readonly<Record<string, CategorizedPattern>>
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(source).map(([key, value]) => [key, value.message])
-  );
-}
+  mergePatternMaps([
+    { source: genericPatterns },
+    { source: walletPatterns },
+    { source: evmPatterns, chain: "evm" },
+    { source: solanaPatterns, chain: "solana" },
+    { source: tronPatterns, chain: "tron" },
+    { source: tonPatterns, chain: "ton" },
+    { source: suiPatterns, chain: "sui" },
+    { source: btcPatterns, chain: "btc" },
+    { source: bridgePatterns },
+    { source: swapCommonPatterns },
+  ]);
 
 export const BUILTIN_CATEGORIZED_PATTERNS: Readonly<
   Record<string, Readonly<CategorizedPattern>>

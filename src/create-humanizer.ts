@@ -1,8 +1,6 @@
 import { getCategoryMeta, resolveErrorCategory } from "./data/category-meta";
-import {
-  BUILTIN_CATEGORIZED_PATTERNS,
-  DEFAULT_FALLBACK_MESSAGE,
-} from "./data/error-map";
+import { DEFAULT_FALLBACK_MESSAGE } from "./data/defaults";
+import { clonePatternMap } from "./data/merge-patterns";
 import type {
   CategorizedPattern,
   CreateHumanizerOptions,
@@ -23,14 +21,6 @@ import {
   buildExtractionFailureResult,
   buildHumanizedResult,
 } from "./utils/result";
-
-function clonePatternMap(
-  source: Readonly<Record<string, CategorizedPattern>>
-): Record<string, CategorizedPattern> {
-  return Object.fromEntries(
-    Object.entries(source).map(([key, value]) => [key, { ...value }])
-  );
-}
 
 function filterPatternsForChain(
   patterns: Record<string, CategorizedPattern>,
@@ -79,17 +69,16 @@ export interface LocalHumanizer {
 }
 
 /**
- * Isolated humanizer with its own pattern registry.
- * Use this in Next.js, tests, and multi-chain apps instead of process-wide
- * addPattern() mutations.
+ * Isolated humanizer backed by an explicit built-in pattern set.
  */
-export function createHumanizer(
+export function createHumanizerFromPatterns(
+  builtinPatterns: Readonly<Record<string, CategorizedPattern>>,
   options: CreateHumanizerOptions = {}
 ): LocalHumanizer {
   const chain = options.chain;
   const fallbackMessage = options.fallbackMessage ?? DEFAULT_FALLBACK_MESSAGE;
   const patterns = filterPatternsForChain(
-    clonePatternMap(BUILTIN_CATEGORIZED_PATTERNS),
+    clonePatternMap(builtinPatterns),
     chain
   );
 
