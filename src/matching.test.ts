@@ -71,6 +71,31 @@ describe("scored matching", () => {
     );
   });
 
+  it("classifies harvest catalog keys", () => {
+    expect(classifyError({ code: 4902 })).toBe("chain_mismatch");
+    expect(humanizeErrorDetailed({ code: 4902 }).matchedKey).toBe("4902");
+
+    expect(
+      humanizeErrorDetailed(new Error("UniswapV2Router: INVALID_PATH")).category
+    ).toBe("contract_error");
+    expect(
+      classifyError(new Error("UniswapV2Router: INSUFFICIENT_A_AMOUNT"))
+    ).toBe("slippage");
+    expect(
+      classifyError(new Error("UniswapV2Router: INSUFFICIENT_B_AMOUNT"))
+    ).toBe("slippage");
+
+    expect(classifyError(new Error("UNPREDICTABLE_GAS_LIMIT"))).toBe("gas");
+    expect(classifyError(new Error("NonceTooLowError"))).toBe("nonce");
+    expect(classifyError(new Error("FeeCapTooLowError"))).toBe("gas");
+    expect(classifyError(new Error("InsufficientFundsError"))).toBe(
+      "insufficient_funds"
+    );
+    expect(classifyError(new Error("InsufficientFundsForFee"))).toBe(
+      "insufficient_funds"
+    );
+  });
+
   it("rebuilds the index when custom patterns are reset", () => {
     addPattern("ZZZ_CUSTOM_RESET_TEST", "Custom reset message.", "slippage");
 

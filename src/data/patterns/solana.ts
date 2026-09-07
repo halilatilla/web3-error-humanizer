@@ -152,6 +152,11 @@ export const solanaPatterns: Record<string, CategorizedPattern> = {
     message: "Insufficient funds to complete this transaction.",
     category: "insufficient_funds",
   },
+  InsufficientFundsForFee: {
+    message:
+      "Your wallet doesn't have enough SOL to cover network fees. Add SOL and try again.",
+    category: "insufficient_funds",
+  },
   IncorrectProgramId: {
     message: "The program ID does not match the expected program.",
     category: "wallet_connection",

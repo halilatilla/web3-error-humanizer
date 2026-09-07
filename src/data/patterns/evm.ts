@@ -317,6 +317,21 @@ export const evmPatterns: Record<string, CategorizedPattern> = {
     message: "Price moved too much. Increase slippage tolerance.",
     category: "slippage",
   },
+  "UniswapV2Router: INVALID_PATH": {
+    message:
+      "The swap path is invalid for this token pair. Pick a different route and try again.",
+    category: "contract_error",
+  },
+  "UniswapV2Router: INSUFFICIENT_A_AMOUNT": {
+    message:
+      "The first token amount was below your minimum. Increase your slippage tolerance and try again.",
+    category: "slippage",
+  },
+  "UniswapV2Router: INSUFFICIENT_B_AMOUNT": {
+    message:
+      "The second token amount was below your minimum. Increase your slippage tolerance and try again.",
+    category: "slippage",
+  },
   "UniswapV2Router: EXCESSIVE_INPUT_AMOUNT": {
     message: "Price moved unfavorably. Increase slippage tolerance.",
     category: "slippage",

@@ -187,12 +187,32 @@ export const genericPatterns: Record<string, CategorizedPattern> = {
     message: "Gas price too low. Increase your gas fee and try again.",
     category: "gas",
   },
+  UNPREDICTABLE_GAS_LIMIT: {
+    message:
+      "The network could not estimate fees. The transaction may fail — check the amount or raise the fee and try again.",
+    category: "gas",
+  },
+  FeeCapTooLowError: {
+    message:
+      "Your max fee is too low for the current network. Raise the fee and try again.",
+    category: "gas",
+  },
+  InsufficientFundsError: {
+    message:
+      "Your wallet doesn't have enough funds to cover this transaction. Add funds and try again.",
+    category: "insufficient_funds",
+  },
   // Nonce Errors
   NONCE_EXPIRED: {
     message: "Transaction outdated. Please refresh and try again.",
     category: "nonce",
   },
   "nonce too low": {
+    message:
+      "You have a pending transaction. Wait for it to complete or speed it up.",
+    category: "nonce",
+  },
+  NonceTooLowError: {
     message:
       "You have a pending transaction. Wait for it to complete or speed it up.",
     category: "nonce",
@@ -416,6 +436,10 @@ export const genericPatterns: Record<string, CategorizedPattern> = {
   "4901": {
     message:
       "Wallet is connected to a different network. Please switch networks.",
+    category: "chain_mismatch",
+  },
+  "4902": {
+    message: "This network isn't in your wallet yet. Add it, then try again.",
     category: "chain_mismatch",
   },
   "5000": {
