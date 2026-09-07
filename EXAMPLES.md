@@ -1,10 +1,66 @@
 # Framework Examples
 
-## Next.js / React (Secure - Recommended)
+## Wagmi / viem (recommended default)
 
-**Security Note:** Never expose your OpenAI API key in the browser. Use a server-side API route:
+Keep this on the client. No API key.
 
-**1. Create API Route (`app/api/humanize-error/route.ts`):**
+```typescript
+import { humanizeErrorDetailed } from "web3-error-humanizer";
+
+try {
+  await walletClient.writeContract({ /* ... */ });
+} catch (error) {
+  const result = humanizeErrorDetailed(error);
+
+  toast.error(result.message);
+
+  if (result.category === "insufficient_allowance") {
+    openApprove();
+  } else if (result.category === "chain_mismatch") {
+    openSwitchNetwork();
+  } else if (result.recoverable) {
+    showRetry();
+  }
+}
+```
+
+## Next.js / React with an isolated instance
+
+```typescript
+// lib/humanize-error.ts
+import { createHumanizer } from "web3-error-humanizer";
+
+const humanizer = createHumanizer({
+  chain: "evm",
+  fallbackMessage: "Swap failed. Please try again.",
+});
+
+export function humanizeSwapError(error: unknown) {
+  return humanizer.humanizeDetailed(error);
+}
+```
+
+```tsx
+"use client";
+import { humanizeSwapError } from "@/lib/humanize-error";
+
+export function SwapButton() {
+  const handleSwap = async () => {
+    try {
+      await contract.write.swap([...]);
+    } catch (err) {
+      const result = humanizeSwapError(err);
+      toast.error(result.message);
+    }
+  };
+}
+```
+
+## Optional AI (server only, never on swap confirm)
+
+Unknown errors can stay on the generic fallback. If you still want AI for support tools, keep the key on the server:
+
+**1. API route (`app/api/humanize-error/route.ts`):**
 
 ```typescript
 import { NextRequest, NextResponse } from "next/server";
@@ -21,25 +77,25 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-**2. Create Client Helper:**
+**2. Client helper:**
 
 ```typescript
-// lib/humanize-error.ts
-import { humanizeError } from "web3-error-humanizer";
+import { humanizeErrorDetailed, humanizeErrorLocal } from "web3-error-humanizer";
 
-export async function humanizeSwapError(error: unknown, context?: SwapContext) {
-  // Try local match first (instant, no network)
-  const localResult = humanizeError(error);
-  if (localResult !== "Transaction failed. Please try again.") {
-    return localResult;
+export async function humanizeSwapError(error: unknown) {
+  const local = humanizeErrorDetailed(error);
+  if (local.source !== "fallback") {
+    return local.message;
   }
 
-  // Fall back to AI via server
-  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorMessage = humanizeErrorLocal(error) ?? String(
+    error instanceof Error ? error.message : error
+  );
+
   const response = await fetch("/api/humanize-error", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ errorMessage, context }),
+    body: JSON.stringify({ errorMessage }),
   });
 
   const data = await response.json();
@@ -47,35 +103,26 @@ export async function humanizeSwapError(error: unknown, context?: SwapContext) {
 }
 ```
 
-**3. Use in Component:**
+Never expose an OpenAI API key in the browser.
 
-```tsx
-"use client";
-import { humanizeSwapError } from "@/lib/humanize-error";
+## i18n
 
-export function SwapButton() {
-  const handleSwap = async () => {
-    try {
-      await contract.write.swap([...]);
-    } catch (err) {
-      const message = await humanizeSwapError(err, {
-        fromToken: "ETH",
-        toToken: "USDC",
-      });
-      toast.error(message);
-    }
-  };
-}
+The package ships English strings. Map structured fields in your app:
+
+```typescript
+const result = humanizeErrorDetailed(error);
+const message = t(`errors.${result.category}`, {
+  defaultValue: result.message,
+});
 ```
 
 ## Node.js Backend
 
 ```typescript
-import { Web3ErrorHumanizer } from "web3-error-humanizer/ai";
+import { createHumanizer } from "web3-error-humanizer";
 
-const humanizer = new Web3ErrorHumanizer({
-  openaiApiKey: process.env.OPENAI_API_KEY!,
-  aiModel: "gpt-4-turbo",
+const humanizer = createHumanizer({
+  fallbackMessage: "Swap failed. Please try again.",
 });
 
 app.post("/api/swap", async (req, res) => {
@@ -83,8 +130,8 @@ app.post("/api/swap", async (req, res) => {
     const result = await executeSwap(req.body);
     res.json({ success: true, result });
   } catch (error) {
-    const message = await humanizer.humanize(error, req.body);
-    res.status(400).json({ success: false, message });
+    const result = humanizer.humanizeDetailed(error);
+    res.status(400).json({ success: false, message: result.message });
   }
 });
 ```
@@ -92,8 +139,5 @@ app.post("/api/swap", async (req, res) => {
 ## CommonJS
 
 ```javascript
-const { humanizeError } = require("web3-error-humanizer");
-
-// Or with AI:
-// const { Web3ErrorHumanizer } = require("web3-error-humanizer/ai");
+const { humanizeError, createHumanizer } = require("web3-error-humanizer");
 ```

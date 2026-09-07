@@ -1,5 +1,6 @@
-import { LOCAL_ERROR_MAP } from "../data/error-map";
 import { matchLocalErrorDetailed } from "./matching";
+
+export type MessageRecognizer = (message: string) => boolean;
 
 interface ErrorLike {
   code?: number | string;
@@ -55,7 +56,8 @@ function shouldSkipCandidate(value: unknown): value is undefined | null | "" {
 }
 
 function pickBestCandidate(
-  candidates: Array<string | null | undefined>
+  candidates: Array<string | null | undefined>,
+  isRecognized: MessageRecognizer
 ): string {
   let fallbackCandidate: string | null = null;
 
@@ -66,7 +68,7 @@ function pickBestCandidate(
 
     fallbackCandidate ??= candidate;
 
-    if (matchLocalErrorDetailed(candidate)) {
+    if (isRecognized(candidate)) {
       return candidate;
     }
   }
@@ -76,38 +78,50 @@ function pickBestCandidate(
 
 function extractFromKnownShape(
   error: ErrorLike,
-  seen: WeakSet<object>
+  seen: WeakSet<object>,
+  isRecognized: MessageRecognizer
 ): string {
   const nestedData = isObject(error.data) ? error.data : undefined;
   const nestedError =
-    error.error !== undefined ? extractRawMessage(error.error, seen) : null;
+    error.error !== undefined
+      ? extractRawMessage(error.error, seen, isRecognized)
+      : null;
   const nestedCause =
-    error.cause !== undefined ? extractRawMessage(error.cause, seen) : null;
-  const codeCandidate =
-    (typeof error.code === "number" || typeof error.code === "string") &&
-    LOCAL_ERROR_MAP[String(error.code)]
+    error.cause !== undefined
+      ? extractRawMessage(error.cause, seen, isRecognized)
+      : null;
+  const rawCode =
+    typeof error.code === "number" || typeof error.code === "string"
       ? String(error.code)
       : null;
+  const codeCandidate = rawCode && isRecognized(rawCode) ? rawCode : null;
 
-  return pickBestCandidate([
-    error.reason,
-    nestedData?.reason,
-    error.shortMessage,
-    nestedData?.message,
-    nestedError,
-    nestedCause,
-    error.message,
-    codeCandidate,
-  ]);
+  return pickBestCandidate(
+    [
+      error.reason,
+      nestedData?.reason,
+      error.shortMessage,
+      nestedData?.message,
+      nestedError,
+      nestedCause,
+      error.message,
+      codeCandidate,
+    ],
+    isRecognized
+  );
 }
 
 /**
  * Extract raw message from complex Web3 error objects.
  * Supports: viem, ethers.js, web3.js, and generic error objects.
  */
+const defaultRecognizer: MessageRecognizer = (message) =>
+  matchLocalErrorDetailed(message) !== null;
+
 export function extractRawMessage(
   error: unknown,
-  seen: WeakSet<object> = new WeakSet()
+  seen: WeakSet<object> = new WeakSet(),
+  isRecognized: MessageRecognizer = defaultRecognizer
 ): string {
   if (error === null || error === undefined) {
     return "Unknown error";
@@ -129,19 +143,22 @@ export function extractRawMessage(
     const revertError = error.walk(isContractFunctionRevertedError);
     if (revertError && typeof revertError === "object") {
       const revert = revertError as ViemRevertLike;
-      return pickBestCandidate([
-        revert.reason,
-        revert.shortMessage,
-        revert.message,
-        error.shortMessage,
-        error.message,
-      ]);
+      return pickBestCandidate(
+        [
+          revert.reason,
+          revert.shortMessage,
+          revert.message,
+          error.shortMessage,
+          error.message,
+        ],
+        isRecognized
+      );
     }
-    return pickBestCandidate([error.shortMessage, error.message]);
+    return pickBestCandidate([error.shortMessage, error.message], isRecognized);
   }
 
   if (isObject(error)) {
-    return extractFromKnownShape(error as ErrorLike, seen);
+    return extractFromKnownShape(error as ErrorLike, seen, isRecognized);
   }
 
   try {
